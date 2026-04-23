@@ -1,0 +1,17 @@
+subscription_id = "00000000-0000-0000-0000-000000000000"
+tenant_id       = "00000000-0000-0000-0000-000000000000"
+
+github_organization = "my-org"
+github_repository   = "azure-infra-template"
+default_branch      = "main"
+
+# Optional: allow OIDC from extra branches (names only, no refs/heads/)
+additional_github_branches = []
+
+# After bootstrap-state-storage.sh — enables Storage Blob Data Contributor on state account for CI SP
+terraform_state_resource_group_name  = "rg-myorg-platform-bootstrap"
+terraform_state_storage_account_name = "stmystatename"
+
+# Optional: narrow role if you scope deployments with custom roles later
+# subscription_role_name              = "Contributor"
+# enable_subscription_role_assignment = true

@@ -1,0 +1,12 @@
+subscription_id = "00000000-0000-0000-0000-000000000000"
+tenant_id       = "00000000-0000-0000-0000-000000000000"
+
+project_prefix = "plt"
+
+# Documented RG naming convention for humans/modules (no policy enforcement in this stack)
+# resource_group_name_pattern = "rg-<org>-<env>-<region>-<workload>"
+
+assign_require_environment_tag_on_rg = true
+mandatory_environment_tag_name       = "environment"
+
+allowed_azure_regions = ["koreacentral"]

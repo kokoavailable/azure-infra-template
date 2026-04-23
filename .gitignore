@@ -1,0 +1,84 @@
+# ── OS / IDE ──
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── OpenTofu / Terraform ──
+**/.terraform/*
+**/.terraform.lock.hcl.bak
+**/.tofu/*
+.terraform.tfstate.lock.info
+
+# State (never commit)
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.plan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Variables / secrets
+*.tfvars
+*.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+!*.tfvars.example
+!*.auto.tfvars.example
+
+# Backend config
+backend.hcl
+backend.local.hcl
+*.backend.hcl
+!backend.hcl.example
+
+# Test leftovers
+**/.tmp/
+**/.test/
+
+# ── Packer ──
+.packer_cache/
+packer_cache/
+*.pkrvars.hcl
+!*.pkrvars.hcl.example
+packer/manifests/*.manifest.json
+
+# Bootstrap state env (tracked: *.env.example only)
+scripts/bootstrap/env/bootstrap-state.*.env
+
+# ── Secrets / certs ──
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.cer
+*.pfx
+*.p12
+*.csr
+*.pub
+
+# ── Build / generated ──
+coverage/
+dist/
+build/
+out/
+*.zip
+*.tar
+*.tar.gz
+
+# ── Python ──
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# ── Node ──
+node_modules/

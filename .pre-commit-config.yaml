@@ -1,0 +1,63 @@
+default_install_hook_types: [pre-commit]
+exclude: ^(\.terraform/|node_modules/)
+
+repos:
+  # 원격 훅 (공통 린트)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+
+  # 로컬 훅
+  - repo: local
+    hooks:
+      - id: terraform-fmt
+        name: terraform fmt
+        entry: terraform fmt -recursive
+        language: system
+        pass_filenames: false
+        files: \.(tf|hcl)$
+
+      - id: prettier
+        name: prettier
+        entry: npm exec -- prettier --write --ignore-unknown
+        language: system
+        types_or: [markdown, yaml, json]
+        exclude: ^package-lock\.json$
+
+      - id: packer-fmt-check
+        name: packer fmt check
+        entry: bash -c 'files=$(find packer -type f -name "*.pkr.hcl" 2>/dev/null); [ -z "$files" ] || packer fmt -check $files'
+        language: system
+        pass_filenames: false
+
+      # 아래는 stages: [manual]이라 git commit 시 자동 실행 안 됨
+      # pre-commit run terraform-validate-stack-template --hook-stage manual 로 수동 호출
+      - id: terraform-validate-stack-template
+        name: terraform validate stack template
+        entry: bash -c 'if [ -d stacks/_stack-template ]; then (cd stacks/_stack-template && terraform init -backend=false && terraform validate); fi'
+        language: system
+        pass_filenames: false
+        stages: [manual]
+
+      - id: terraform-test-modules
+        name: terraform test modules
+        entry: bash -c 'find modules -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while read -r d; do if [ -d "$d/tests" ]; then echo "==> terraform test $d"; (cd "$d" && terraform test) || exit 1; fi; done'
+        language: system
+        pass_filenames: false
+        stages: [manual]
+
+      - id: terraform-docs-readme
+        name: terraform-docs refresh
+        entry: bash -c 'command -v terraform-docs >/dev/null || exit 0; terraform-docs markdown table --output-file README.md --output-mode inject $(pwd)/modules >/dev/null 2>&1 || true'
+        language: system
+        pass_filenames: false
+        stages: [manual]
