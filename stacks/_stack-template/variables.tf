@@ -10,7 +10,7 @@ variable "tenant_id" {
 
 variable "organization" {
   type        = string
-  description = "Organization or platform segment used in default_tags.organization."
+  description = "Organization or platform segment (feeds naming locals and common_tags)."
 }
 
 variable "environment" {
@@ -30,12 +30,12 @@ variable "region_code" {
 
 variable "cost_center" {
   type        = string
-  description = "Cost allocation tag applied to resources created in this stack."
+  description = "Cost allocation value included in common_tags."
   default     = "unset"
 }
 
 variable "owner" {
   type        = string
-  description = "Owning team or group for operational routing."
+  description = "Owning team or group included in common_tags."
   default     = "platform"
 }

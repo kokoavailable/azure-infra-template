@@ -5,15 +5,21 @@ STACK ?=
 MODULE ?=
 PACKER_TEMPLATE ?=
 PACKER_VARS ?=
+# When set, plan/apply/destroy pass -backend-config=$(BACKEND_CONFIG). Empty = auto: use backend.hcl if that file exists in STACK.
+BACKEND_CONFIG ?=
 
 .PHONY: help check-tools pre-commit-install fmt fmt-check validate validate-all \
         test docs docs-fmt plan apply destroy packer-fmt packer-validate packer-build \
-        bootstrap-state bootstrap-state-dev bootstrap-state-stg bootstrap-state-prod
+        bootstrap-state bootstrap-state-dev bootstrap-state-stg bootstrap-state-prod \
+        bootstrap-state-teardown bootstrap-state-teardown-dev bootstrap-state-teardown-stg bootstrap-state-teardown-prod
 
 BOOTSTRAP_DIR := scripts/bootstrap
 BOOTSTRAP_SCRIPT := $(BOOTSTRAP_DIR)/bootstrap-state-storage.sh
+BOOTSTRAP_TEARDOWN_SCRIPT := $(BOOTSTRAP_DIR)/bootstrap-state-teardown.sh
 # dev | stg | prod — selects scripts/bootstrap/env/bootstrap-state.$(BOOTSTRAP_ENV).env
 BOOTSTRAP_ENV ?= dev
+# Set to 1 with make bootstrap-state-teardown to confirm RG deletion
+BOOTSTRAP_TEARDOWN_YES ?=
 
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*## "; printf "\nTargets:\n\n"} /^[a-zA-Z0-9_.-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -22,7 +28,9 @@ help: ## Show available targets
 	@printf "  MODULE=<path>          e.g. modules/network\n"
 	@printf "  PACKER_TEMPLATE=<file> e.g. packer/build-runtime-base.pkr.hcl\n"
 	@printf "  PACKER_VARS=<file>     e.g. packer/dev.auto.pkrvars.hcl\n"
-	@printf "  BOOTSTRAP_ENV=<name>   dev | stg | prod (make bootstrap-state)\n\n"
+	@printf "  BOOTSTRAP_ENV=<name>   dev | stg | prod (bootstrap-state / teardown)\n"
+	@printf "  BOOTSTRAP_TEARDOWN_YES=1  required for bootstrap-state-teardown-*\n"
+	@printf "  BACKEND_CONFIG=<file>  optional; default backend.hcl if present in STACK\n\n"
 
 # ---------- Bootstrap (remote state storage) ----------
 
@@ -43,6 +51,24 @@ bootstrap-state-stg: ## Same as bootstrap-state with BOOTSTRAP_ENV=stg
 
 bootstrap-state-prod: ## Same as bootstrap-state with BOOTSTRAP_ENV=prod
 	@$(MAKE) bootstrap-state BOOTSTRAP_ENV=prod
+
+bootstrap-state-teardown: ## Delete bootstrap RG for env file (needs BOOTSTRAP_TEARDOWN_YES=1)
+	@test "$(BOOTSTRAP_TEARDOWN_YES)" = "1" || { echo "Refusing: set BOOTSTRAP_TEARDOWN_YES=1 to delete resource group."; exit 1; }
+	@env_file="$(BOOTSTRAP_DIR)/env/bootstrap-state.$(BOOTSTRAP_ENV).env"; \
+	if [ ! -f "$$env_file" ]; then \
+	  echo "Missing: $$env_file"; \
+	  exit 1; \
+	fi
+	@$(BOOTSTRAP_TEARDOWN_SCRIPT) --env-file "$(BOOTSTRAP_DIR)/env/bootstrap-state.$(BOOTSTRAP_ENV).env" --yes
+
+bootstrap-state-teardown-dev: ## Teardown bootstrap RG (dev); needs BOOTSTRAP_TEARDOWN_YES=1
+	@$(MAKE) bootstrap-state-teardown BOOTSTRAP_ENV=dev
+
+bootstrap-state-teardown-stg: ## Teardown bootstrap RG (stg); needs BOOTSTRAP_TEARDOWN_YES=1
+	@$(MAKE) bootstrap-state-teardown BOOTSTRAP_ENV=stg
+
+bootstrap-state-teardown-prod: ## Teardown bootstrap RG (prod); needs BOOTSTRAP_TEARDOWN_YES=1
+	@$(MAKE) bootstrap-state-teardown BOOTSTRAP_ENV=prod
 
 check-tools: ## Check required local binaries (Terraform 1.14.9 per versions.tf)
 	@command -v terraform >/dev/null || { echo "terraform not found"; exit 1; }
@@ -95,15 +121,21 @@ docs: ## Refresh terraform-docs via pre-commit
 
 plan: ## Run terraform plan for a stack
 	@test -n "$(STACK)" || { echo "STACK is required"; exit 1; }
-	@cd $(STACK) && terraform init && terraform plan
+	@cd $(STACK) && bc="$(BACKEND_CONFIG)"; \
+	  if [ -z "$$bc" ] && [ -f backend.hcl ]; then bc=backend.hcl; fi; \
+	  if [ -n "$$bc" ]; then terraform init -backend-config="$$bc"; else terraform init; fi && terraform plan
 
 apply: ## Run terraform apply for a stack
 	@test -n "$(STACK)" || { echo "STACK is required"; exit 1; }
-	@cd $(STACK) && terraform init && terraform apply
+	@cd $(STACK) && bc="$(BACKEND_CONFIG)"; \
+	  if [ -z "$$bc" ] && [ -f backend.hcl ]; then bc=backend.hcl; fi; \
+	  if [ -n "$$bc" ]; then terraform init -backend-config="$$bc"; else terraform init; fi && terraform apply
 
 destroy: ## Run terraform destroy for a stack
 	@test -n "$(STACK)" || { echo "STACK is required"; exit 1; }
-	@cd $(STACK) && terraform init && terraform destroy
+	@cd $(STACK) && bc="$(BACKEND_CONFIG)"; \
+	  if [ -z "$$bc" ] && [ -f backend.hcl ]; then bc=backend.hcl; fi; \
+	  if [ -n "$$bc" ]; then terraform init -backend-config="$$bc"; else terraform init; fi && terraform destroy
 
 # ---------- Packer ----------
 
