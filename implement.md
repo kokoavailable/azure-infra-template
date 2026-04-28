@@ -90,7 +90,7 @@
 **도구 버전 (이 레포 고정)**  
 Terraform CLI **1.14.9**, `azurerm` **4.69.0**, `azuread` **3.8.0** (루트 `.terraform-version`, 각 스택 `versions.tf`)
 
-**이 레포에서의 상태:** 위 경로에 Terraform 코드·CI·Makefile·pre-commit까지 반영됨. **아직 네트워크 스택은 미구현.**
+**이 레포에서의 상태:** 위 경로에 Terraform 코드·CI·Makefile·pre-commit까지 반영됨. 플랫폼 스택 적용 시 **공통·스택 `terraform.tfvars`와 루트 `Makefile`의 OpenTofu(`tofu`) 이중 `-var-file` 규약**은 §4.1 참고. **아직 네트워크 스택은 미구현.**
 
 ---
 
@@ -104,7 +104,7 @@ Terraform CLI **1.14.9**, `azurerm` **4.69.0**, `azuread` **3.8.0** (루트 `.te
 
 **완료 기준:** zone 생성, 예제·인증 검증 레코드 동작, naming/subdomain 규약 확정.
 
-**이 레포에서의 상태:** 디렉터리·README만 있음 → **다음 구현 후보.**
+**이 레포에서의 상태:** Terraform 스택 반영됨 — RG·`azurerm_dns_zone`(apex)·선택 `txt_records`(ACME 등)·공통 태그·출력(`name_servers`, `fqdn_environment_roots` 등). `terraform.tfvars.example`, `backend.hcl.example`, `.terraform.lock.hcl` 포함. CI(`platform-bootstrap-ci.yml`)의 `terraform validate` 목록에 포함. **실제 Azure에 Zone이 생기고 공용으로 해석되려면** `platform/terraform.shared.tfvars`·스택 `terraform.tfvars`·`backend.hcl` 준비 후 **`make apply STACK=platform/connectivity/global/00-dns-public`**(루트 `Makefile`의 OpenTofu 이중 `-var-file` 규약)와 레지스트라 **NS 위임**이 필요하다(스택 README·`implement.md` §4.1 참고).
 
 ---
 
@@ -228,8 +228,44 @@ Peering은 nontransitive이므로 **spoke 간 통신**이 필요하면 허브 �
 | `platform/`·`spokes/` 디렉터리와 스택 접두 규약 | **0단계** |
 | state 부트스트랩: env 파일(dev/stg/prod) + `make bootstrap-state-*` + 티어다운 스크립트; OIDC + 정책 + 템플릿 + CI | **1단계 (B층)** |
 | Terraform 1.14.9 / provider 핀 | **1단계** 도구 계약 |
+| `platform/connectivity/global/00-dns-public` — public zone·선택 TXT·lock·스택 README | **2단계 (C층 — public DNS만)** |
+| **변수·실행 규약:** 루트 `Makefile` + OpenTofu(`tofu`) — `git rev-parse --show-toplevel`로 리포 루트 고정, `platform/terraform.shared.tfvars`(구독·테넌트)와 각 스택 `terraform.tfvars`를 **항상 `-var-file` 두 번**으로 주입(symlink·cwd 자동 로딩에 의존하지 않음) | **1·2단계 공통 운영 방식** |
+| **`make plan` / `apply` / `destroy`:** `STACK=<경로>` 필수, 위 두 tfvars 파일 존재 검사 후 `tofu init` → `tofu plan|apply|destroy` | 동일 |
+| **`plan-here` / `apply-here` / `destroy-here`:** 스택 디렉터리에서 `make -f "$(git rev-parse --show-toplevel)/Makefile" plan-here` 등으로 동일 규약 유지 | 동일 |
+| `platform/terraform.shared.tfvars.example` → gitignore된 `terraform.shared.tfvars` 복사본·각 스택 `terraform.tfvars.example` → 스택별 `terraform.tfvars` | 동일 |
+| `platform/identity/02-identity-federation` — `locals {}`를 **`locals.tf`** 로 분리(`main.tf`와 역할 분리) | **1단계** 코드 구조 |
 
-**아직 안 한 것:** 2단계 이후 실제 리소스 (`00-dns-public`, 허브 네트워크, private DNS, shared-services Terraform, 스포크 스택).
+**아직 안 한 것:** 3단계 이후 연결성·워크로드 쪽 실제 리소스(허브 네트워크, private DNS, shared-services Terraform, 스포크 스택). `00-dns-public`은 **코드·CI 검증까지 반영**되어 있고, 구독에 올리고 도메인 NS를 맞추는 **apply·운영 완료**는 각 환경에서 진행하면 된다.
+
+---
+
+### 4.1 변수 파일·실행 규약 (Makefile / OpenTofu)
+
+플랫폼·스택 적용 시 **입력값이 어디서 오는지**가 팀·CI와 일치해야 한다. 이 레포는 다음을 표준으로 둔다.
+
+**파일 두 축**
+
+| 파일 | 역할 |
+| --- | --- |
+| `platform/terraform.shared.tfvars` | `subscription_id`, `tenant_id` 등 **모든 스택에서 공통으로 쓰는 최소 필드**(예시는 `terraform.shared.tfvars.example`). gitignore. |
+| `<스택>/terraform.tfvars` | 해당 스택만의 변수(예: DNS apex, GitHub org/repo). 예시는 각 `terraform.tfvars.example`. |
+
+Terraform/OpenTofu는 **현재 디렉터리**의 `terraform.tfvars`·`*.auto.tfvars`만 자동 로드하므로, 리포 중앙의 shared 파일은 **반드시 CLI `-var-file`** 로 넣는다. symlink로 스택마다 `*.auto.tfvars`를 두는 방식은 Windows·경로 깊이·가시성 때문에 **표준으로 쓰지 않는다.**
+
+**실행**
+
+- 리포 루트에서:  
+  `make plan STACK=platform/identity/02-identity-federation`  
+  `make apply STACK=platform/connectivity/global/00-dns-public`  
+  내부적으로 `cd $(git rev-parse --show-toplevel)/$(STACK)` 후 **`tofu`** 가  
+  `-var-file=<repo>/platform/terraform.shared.tfvars` **먼저**, `-var-file=terraform.tfvars` **다음**(중복 키는 스택 파일이 우선).
+- 스택 폴더 안에서 작업할 때:  
+  `make -f "$(git rev-parse --show-toplevel)/Makefile" plan-here` · `apply-here` · `destroy-here`  
+  (`CURDIR` 기준으로 같은 이중 `-var-file`).
+
+**주의:** 루트 `Makefile`의 `plan`/`apply`/`destroy`는 위 두 파일이 없으면 바로 실패한다(실수로 빈 변수로 apply 하는 것을 막기 위함). **`cd` 스택만 하고 옵션 없이 `tofu apply`만 치는 흐름은 지원 대상이 아니다.** 포맷·검증용으로는 기존처럼 `terraform fmt` / `make validate STACK=…`(CI와 동일하게 `terraform validate`)를 쓸 수 있다.
+
+자세한 한 줄 요약은 `platform/README.md`, 스택 복사 시는 `stacks/README.md`를 본다.
 
 ---
 
@@ -238,8 +274,8 @@ Peering은 nontransitive이므로 **spoke 간 통신**이 필요하면 허브 �
 문서와 폴더를 허브-스포크 기준으로 맞춘 뒤, 구현은 대략 이 순서가 자연스럽다.
 
 1. 문서·폴더·네이밍 (0단계 — 이미 반영)
-2. `scripts/bootstrap/env/*.env.example` → `bootstrap-state.<env>.env` 복사 후 `make bootstrap-state-dev`(또는 stg/prod)로 state 스토리지 준비 → `platform/identity`, `platform/management` (1단계 — 코드 반영됨). 롤백이 필요하면 티어다운 스크립트/`make bootstrap-state-teardown-*`로 RG 삭제(복구 불가).
-3. `platform/connectivity/global/00-dns-public`
+2. `scripts/bootstrap/env/*.env.example` → `bootstrap-state.<env>.env` 복사 후 `make bootstrap-state-dev`(또는 stg/prod)로 state 스토리지 준비 → `platform/terraform.shared.tfvars.example` → `terraform.shared.tfvars`, 각 스택 `terraform.tfvars`·`backend.hcl` → `platform/identity`, `platform/management` (1단계 — 코드 반영됨). 롤백이 필요하면 티어다운 스크립트/`make bootstrap-state-teardown-*`로 RG 삭제(복구 불가).
+3. `platform/connectivity/global/00-dns-public` — 스택 코드 반영됨; 공통·스택 tfvars·`backend.hcl` 준비 후 **`make plan STACK=platform/connectivity/global/00-dns-public`** → **`make apply STACK=…`**, 출력 `name_servers`로 레지스트라 NS 위임(스택 `README.md`, §4.1).
 4. `platform/connectivity/.../hub/00-hub-network`
 5. `platform/connectivity/.../hub/05-private-dns`
 6. `platform/shared-services/nonprod/*` (이후 prod)

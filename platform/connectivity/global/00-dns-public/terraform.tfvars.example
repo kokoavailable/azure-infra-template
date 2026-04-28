@@ -1,0 +1,16 @@
+# subscription_id / tenant_id: set once in ../../../terraform.shared.tfvars (see platform/terraform.shared.tfvars.example);
+# repo-root `make plan|apply STACK=platform/connectivity/global/00-dns-public` loads it automatically.
+
+organization = "myorg"
+
+# Registered apex domain (no scheme, no trailing dot)
+root_domain_name = "example.com"
+
+# Optional TXT examples (remove or leave empty initially)
+# txt_records = {
+#   acme_www = {
+#     relative_name = "_acme-challenge.www"
+#     values        = ["acme-token-from-your-ca"]
+#     ttl           = 300
+#   }
+# }

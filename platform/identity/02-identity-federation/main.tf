@@ -6,22 +6,6 @@ data "azurerm_storage_account" "tfstate" {
   resource_group_name = var.terraform_state_resource_group_name
 }
 
-locals {
-  github_repo_full = "${var.github_organization}/${var.github_repository}"
-
-  federated_branch_names = distinct(concat(
-    [var.default_branch],
-    var.additional_github_branches
-  ))
-
-  federated_credentials = {
-    for b in local.federated_branch_names : b => {
-      display_name = "github-${replace(b, "/", "-")}"
-      subject      = "repo:${local.github_repo_full}:ref:refs/heads/${b}"
-    }
-  }
-}
-
 resource "azuread_application" "github_oidc" {
   display_name = "${var.project_prefix}-${var.github_repository}-ci"
 }

@@ -38,6 +38,7 @@ jobs:
         run: |
           set -euo pipefail
           for d in \
+            platform/connectivity/global/00-dns-public \
             platform/identity/02-identity-federation \
             platform/management/03-policy-governance \
             stacks/_stack-template

@@ -1,5 +1,4 @@
-subscription_id = "00000000-0000-0000-0000-000000000000"
-tenant_id       = "00000000-0000-0000-0000-000000000000"
+# subscription_id / tenant_id: for platform stacks use platform/terraform.shared.tfvars + make plan|apply from repo root.
 
 organization = "myorg"
 environment  = "dev"

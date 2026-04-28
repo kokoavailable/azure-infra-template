@@ -1,0 +1,6 @@
+# Copy to platform/terraform.shared.tfvars (gitignored) and replace placeholders.
+# Root Makefile runs: tofu plan|apply|destroy -var-file=<this> -var-file=terraform.tfvars
+# (stack terraform.tfvars second — it overrides duplicate keys).
+
+subscription_id = "00000000-0000-0000-0000-000000000000"
+tenant_id       = "00000000-0000-0000-0000-000000000000"

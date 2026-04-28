@@ -22,14 +22,14 @@ variable "resource_group_name_pattern" {
 
 variable "assign_require_environment_tag_on_rg" {
   type        = bool
-  description = "Assign built-in policy requiring a tag on resource groups (see mandatory_environment_tag_name)."
+  description = "Assign built-in policy requiring a tag on resource groups (one assignment per key in mandatory_resource_group_tag_keys)."
   default     = true
 }
 
-variable "mandatory_environment_tag_name" {
-  type        = string
-  description = "Tag key required on all resource groups when assign_require_environment_tag_on_rg is true."
-  default     = "environment"
+variable "mandatory_resource_group_tag_keys" {
+  type        = list(string)
+  description = "Tag keys enforced on every resource group; each key gets its own built-in 'Require a tag on resource groups' assignment when assign_require_environment_tag_on_rg is true."
+  default     = ["environment"]
 }
 
 variable "allowed_azure_regions" {
