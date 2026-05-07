@@ -15,6 +15,15 @@ Describe the change in one or two sentences.
 - Affected paths:
 - Out of scope:
 
+## Agent Workflow
+
+- Architect output:
+- Investigator output:
+- Implementer output:
+- Validator output:
+- Reviewer focus:
+- Portfolio note:
+
 ## Dependency Path
 
 - Upstream dependencies:

@@ -38,7 +38,7 @@ The repository operating model is:
 
 - `scripts/bootstrap/` contains one-time or rare bootstrap scripts, especially remote state setup.
 
-- `.codex/prompts/` contains repository-standard task prompts for investigation, implementation, and review.
+- `.codex/prompts/` contains repository-standard task prompts for architecture, investigation, implementation, validation, review, and portfolio output.
 
 - `docs/` contains architecture, ADRs, runbooks, safety assumptions, workflow rules, and release strategy.
 
@@ -210,6 +210,7 @@ Relevant docs:
 - `docs/security-baseline.md`
 - `docs/runbook.md`
 - `docs/release-strategy.md`
+- `docs/agent-workflow.md`
 - `docs/codex-workflow.md`
 - `docs/ai-native-workflow.md`
 

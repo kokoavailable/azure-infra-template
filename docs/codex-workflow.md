@@ -4,7 +4,7 @@
 
 This document defines how Codex should operate in this repository so investigation, implementation, and review stay small, explicit, and safe.
 
-It is the repository-level operating system for AI-assisted work.
+It is the repository-level operating system for AI-assisted work. The role-based workflow is defined in `agent-workflow.md`.
 
 ## Core rule
 
@@ -21,6 +21,26 @@ The default behavior is:
 7. review the diff before finishing
 
 ## Operating modes
+
+### Architect
+
+Use architect mode when the task changes topology, stack boundaries, environment policy, deployment order, security assumptions, or workflow rules.
+
+Expected behavior:
+
+- identify the decision being made
+- identify affected boundaries and blast radius
+- document trade-offs
+- recommend an ADR or documentation target
+- define the smallest safe implementation scope
+
+Expected output:
+
+1. decision summary
+2. affected boundaries
+3. accepted trade-offs
+4. ADR or documentation target
+5. smallest next implementation scope
 
 ### Investigate
 
@@ -83,6 +103,46 @@ Expected output:
 3. required fixes
 4. verification commands
 5. merge readiness
+
+### Validate
+
+Use validate mode after implementation and before review.
+
+Expected behavior:
+
+- use Makefile entrypoints when possible
+- run formatting checks for documentation-only changes
+- run stack validation for stack-scoped changes when applicable
+- avoid apply, destroy, state mutation, and unexpected plan execution
+- state skipped validation explicitly
+
+Expected output:
+
+1. commands run
+2. commands skipped
+3. validation result
+4. assumptions
+5. unresolved validation gaps
+
+### Portfolio
+
+Use portfolio mode after a PR or milestone.
+
+Expected behavior:
+
+- convert the work into interview-ready evidence
+- distinguish verified implementation from design intent
+- explain trade-offs and remaining risks
+- identify the next milestone
+
+Expected output:
+
+1. portfolio narrative
+2. architecture talking points
+3. trade-offs
+4. validation evidence
+5. remaining risks
+6. next milestone
 
 ## Command policy
 
@@ -147,6 +207,7 @@ Relevant documents include:
 - [security-baseline.md](/Users/baesangdo/private/azure-infra-template/docs/security-baseline.md)
 - [release-strategy.md](/Users/baesangdo/private/azure-infra-template/docs/release-strategy.md)
 - [ai-native-workflow.md](/Users/baesangdo/private/azure-infra-template/docs/ai-native-workflow.md)
+- [agent-workflow.md](/Users/baesangdo/private/azure-infra-template/docs/agent-workflow.md)
 
 ## PR shape
 

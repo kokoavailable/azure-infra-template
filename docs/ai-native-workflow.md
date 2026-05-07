@@ -70,16 +70,20 @@ Codex or a human reviewer should:
 
 The repository ships prompt files under `.codex/prompts/`:
 
+- `architect.md`
 - `investigate.md`
 - `implement.md`
+- `validate.md`
 - `review.md`
+- `portfolio.md`
 
-These prompts are lightweight wrappers around the repository rules. They should stay aligned with:
+These prompts are lightweight wrappers around the repository rules and the role model in `docs/agent-workflow.md`. They should stay aligned with:
 
 - root `AGENTS.md`
 - scoped `platform/AGENTS.md`
 - scoped `spokes/AGENTS.md`
 - scoped `stacks/AGENTS.md`
+- `docs/agent-workflow.md`
 - the pull request template
 
 If one changes materially, the others should be reviewed for drift.
