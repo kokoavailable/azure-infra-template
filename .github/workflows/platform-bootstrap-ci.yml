@@ -23,18 +23,29 @@ concurrency:
 jobs:
   fmt-validate:
     runs-on: ubuntu-latest
+    env:
+      # Placeholders for `tofu validate` only (no Azure calls); stacks share provider variable shapes.
+      TF_VAR_subscription_id: "00000000-0000-0000-0000-000000000001"
+      TF_VAR_tenant_id: "00000000-0000-0000-0000-000000000002"
+      TF_VAR_organization: "ci"
+      TF_VAR_root_domain_name: "example.invalid"
+      TF_VAR_github_organization: "example-org"
+      TF_VAR_github_repository: "example-repo"
+      TF_VAR_environment: "dev"
+      TF_VAR_workload: "ci"
+      TF_VAR_region_code: "krc"
     steps:
       - uses: actions/checkout@v4
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: opentofu/setup-opentofu@v2
         with:
-          terraform_version: "1.14.9"
-          terraform_wrapper: false
+          tofu_version: "1.11.6"
+          tofu_wrapper: false
 
-      - name: terraform fmt (check)
-        run: terraform fmt -check -recursive
+      - name: tofu fmt (check)
+        run: tofu fmt -check -recursive
 
-      - name: terraform validate (bootstrap stacks)
+      - name: tofu validate (bootstrap stacks)
         run: |
           set -euo pipefail
           for d in \
@@ -44,7 +55,7 @@ jobs:
             stacks/_stack-template
           do
             echo "==> $d"
-            (cd "$d" && terraform init -backend=false -input=false && terraform validate)
+            (cd "$d" && tofu init -backend=false -input=false && tofu validate)
           done
 
   # Proves GitHub Actions OIDC to Azure. Configure repo secrets first; run manually.

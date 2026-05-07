@@ -30,7 +30,7 @@ override.tf.json
 *.auto.tfvars.json
 !*.tfvars.example
 !*.auto.tfvars.example
-# Tracked symlinks only — point at platform/terraform.shared.tfvars (no secrets in the link path)
+# Allow committing only symlink stubs named platform.auto.tfvars → ../../terraform.shared.tfvars (paths only; never commit real IDs here).
 !platform/**/platform.auto.tfvars
 
 # Backend config

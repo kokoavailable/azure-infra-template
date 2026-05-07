@@ -2,17 +2,24 @@
 
 ## Repository role
 
-This repository is an AI-native Azure infrastructure platform template.
+This repository is a Codex-native Azure infrastructure platform template.
 
 It uses:
+
 - OpenTofu for infrastructure as code
 - GitHub Actions for CI/CD
 - GitHub OIDC for Azure authentication
 - Packer for image building
 - layered platform/spoke stack boundaries
-- Codex for investigation, implementation, validation, and review assistance
+- Codex for investigation, implementation, validation, and review
 
-The goal is to build a safe, reviewable, production-like Azure platform template.
+The repository operating model is:
+
+- document first
+- inspect before editing
+- keep changes small and reviewable
+- prefer Makefile entrypoints
+- separate investigation, implementation, and review outputs
 
 ## Top-level boundaries
 
@@ -31,15 +38,13 @@ The goal is to build a safe, reviewable, production-like Azure platform template
 
 - `scripts/bootstrap/` contains one-time or rare bootstrap scripts, especially remote state setup.
 
-- `docs/` contains architecture, ADRs, runbooks, security baseline, naming conventions, layer dependency rules, and release strategy.
+- `.codex/prompts/` contains repository-standard task prompts for investigation, implementation, and review.
 
-- `examples/` contains reference workloads and portfolio-grade examples.
+- `docs/` contains architecture, ADRs, runbooks, safety assumptions, workflow rules, and release strategy.
 
 ## Current implementation focus
 
-The current priority is not to expand the whole tree at once.
-
-The priority order is:
+The current priority is:
 
 1. repository hygiene
 2. Makefile safety interface
@@ -52,7 +57,7 @@ The priority order is:
 
 ## Safety rules
 
-Never run the following commands unless the user explicitly asks:
+Never run the following unless the user explicitly asks:
 
 - `tofu apply`
 - `tofu destroy`
@@ -90,6 +95,7 @@ Use the Makefile as the primary command interface.
 Preferred commands:
 
 - `make fmt`
+- `make docs-fmt`
 - `make init STACK=<stack-path>`
 - `make validate STACK=<stack-path>`
 - `make plan STACK=<stack-path>`
@@ -97,7 +103,28 @@ Preferred commands:
 
 If a Makefile target is missing or broken, explain the problem before using raw `tofu` commands.
 
-Do not run raw `tofu apply` or `tofu destroy`.
+Do not run raw `tofu apply` or raw `tofu destroy`.
+
+## Codex operating modes
+
+Use these modes consistently:
+
+1. Investigate
+   - read `AGENTS.md` and the nearest scoped `AGENTS.md`
+   - inspect relevant files before proposing changes
+   - explain current structure, affected boundaries, dependencies, and risks
+   - do not edit files
+
+2. Implement
+   - make the smallest safe change that satisfies the request
+   - stay inside the approved scope
+   - update documentation when assumptions, interfaces, or workflows change
+   - run safe formatting and validation commands when applicable
+
+3. Review
+   - review the diff with emphasis on risk
+   - focus on state boundaries, backend behavior, dependency direction, RBAC, DNS, secrets, and validation coverage
+   - do not praise or restate intent as if it were proof
 
 ## OpenTofu stack rules
 
@@ -141,7 +168,7 @@ Any platform change must include:
 
 ## Spoke rules
 
-Spoke stacks are workload/environment-specific.
+Spoke stacks are workload and environment specific.
 
 Preferred implementation order:
 
@@ -149,9 +176,10 @@ Preferred implementation order:
 2. `05-secrets`
 3. `06-configuration`
 4. `20-data`
-5. `30-compute`
-6. `10-edge`
-7. `40-observability`
+5. `25-utility-access`
+6. `30-compute`
+7. `10-edge`
+8. `40-observability`
 
 Do not modify dev, stg, and prod together unless explicitly required.
 
@@ -172,6 +200,7 @@ Update documentation when changing:
 - security assumptions
 - DNS behavior
 - RBAC behavior
+- Codex workflow expectations
 
 Relevant docs:
 
@@ -181,24 +210,27 @@ Relevant docs:
 - `docs/security-baseline.md`
 - `docs/runbook.md`
 - `docs/release-strategy.md`
+- `docs/codex-workflow.md`
+- `docs/ai-native-workflow.md`
 
 ## Work process
 
 For non-trivial tasks:
 
 1. Read this file first.
-2. Inspect relevant files.
-3. Do not edit immediately.
-4. Explain the current structure.
-5. Identify affected stacks/modules.
-6. Identify risks.
-7. Propose the smallest safe change.
-8. Implement only the requested scope.
-9. Run `make fmt`.
-10. Run `make validate STACK=<stack-path>` when applicable.
-11. Run `make plan STACK=<stack-path>` only when credentials/backend are available and the user expects a plan.
-12. Review the diff.
-13. Summarize changed files, validation result, and remaining risks.
+2. Read the nearest scoped `AGENTS.md`.
+3. Inspect relevant files.
+4. Do not edit immediately.
+5. Explain the current structure.
+6. Identify affected stacks, modules, or workflows.
+7. Identify risks and blast radius.
+8. Propose the smallest safe change.
+9. Implement only the requested scope.
+10. Run `make fmt` and `make docs-fmt` when applicable and safe.
+11. Run `make validate STACK=<stack-path>` when applicable.
+12. Run `make plan STACK=<stack-path>` only when credentials and backend are available and the user expects a plan.
+13. Review the diff.
+14. Summarize changed files, validation result, and remaining risks.
 
 ## Review checklist
 
@@ -217,7 +249,8 @@ Before finishing, check:
 - missing variables
 - missing outputs
 - missing README updates
-- missing ADR/runbook updates
+- missing ADR or runbook updates
+- missing workflow documentation
 - missing validation
 
 ## Response format

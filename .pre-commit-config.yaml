@@ -19,9 +19,9 @@ repos:
   # 로컬 훅
   - repo: local
     hooks:
-      - id: terraform-fmt
-        name: terraform fmt
-        entry: terraform fmt -recursive
+      - id: tofu-fmt
+        name: tofu fmt
+        entry: tofu fmt -recursive
         language: system
         pass_filenames: false
         files: \.(tf|hcl)$
@@ -40,17 +40,17 @@ repos:
         pass_filenames: false
 
       # 아래는 stages: [manual]이라 git commit 시 자동 실행 안 됨
-      # pre-commit run terraform-validate-stack-template --hook-stage manual 로 수동 호출
-      - id: terraform-validate-stack-template
-        name: terraform validate stack template
-        entry: bash -c 'if [ -d stacks/_stack-template ]; then (cd stacks/_stack-template && terraform init -backend=false && terraform validate); fi'
+      # pre-commit run tofu-validate-stack-template --hook-stage manual 로 수동 호출
+      - id: tofu-validate-stack-template
+        name: tofu validate stack template
+        entry: bash -c 'export TF_VAR_subscription_id=00000000-0000-0000-0000-000000000001 TF_VAR_tenant_id=00000000-0000-0000-0000-000000000002 TF_VAR_organization=ci TF_VAR_environment=dev TF_VAR_workload=ci TF_VAR_region_code=krc; if [ -d stacks/_stack-template ]; then (cd stacks/_stack-template && tofu init -backend=false && tofu validate); fi'
         language: system
         pass_filenames: false
         stages: [manual]
 
-      - id: terraform-test-modules
-        name: terraform test modules
-        entry: bash -c 'find modules -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while read -r d; do if [ -d "$d/tests" ]; then echo "==> terraform test $d"; (cd "$d" && terraform test) || exit 1; fi; done'
+      - id: tofu-test-modules
+        name: tofu test modules
+        entry: bash -c 'find modules -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while read -r d; do if [ -d "$d/tests" ]; then echo "==> tofu test $d"; (cd "$d" && tofu test) || exit 1; fi; done'
         language: system
         pass_filenames: false
         stages: [manual]

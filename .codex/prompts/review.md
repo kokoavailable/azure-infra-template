@@ -1,5 +1,8 @@
-Read AGENTS.md first.
+Read `AGENTS.md` first.
 
+If the target is under `platform/`, `spokes/`, or `stacks/`, also read the nearest scoped `AGENTS.md`.
+
+Task:
 Review the current diff as a senior Azure/OpenTofu infrastructure reviewer.
 
 Focus:
@@ -8,15 +11,20 @@ Focus:
 - provider changes
 - provider lock changes
 - remote-state direction
+- cyclic dependency risk
 - RBAC scope creep
 - secret leakage
-- DNS/certificate impact
+- DNS and certificate impact
 - missing variables
 - missing outputs
 - missing docs
 - missing validation
 
-Do not praise.
+Rules:
+- Do not praise.
+- Findings come first.
+- Prefer concrete file references.
+- Separate blocking from non-blocking issues.
 
 Output:
 1. blocking issues

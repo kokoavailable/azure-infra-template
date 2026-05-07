@@ -1,15 +1,20 @@
-Read AGENTS.md first.
+Read `AGENTS.md` first.
 
-Implement the smallest safe change for the requested target.
+If the target is under `platform/`, `spokes/`, or `stacks/`, also read the nearest scoped `AGENTS.md`.
+
+Task:
+Implement the smallest safe change for the requested scope.
 
 Rules:
 - Stay inside the requested scope.
-- Do not run apply or destroy.
-- Do not modify backend configuration unless requested.
+- Do not modify unrelated stacks or modules.
+- Do not run `tofu apply` or `tofu destroy`.
+- Do not modify backend behavior unless requested.
 - Do not hardcode secrets or real environment values.
 - Use Makefile commands when possible.
-- Run fmt.
-- Run validate when applicable.
+- Run safe formatting commands when available.
+- Run validation only when applicable to the changed scope.
+- Review the diff before finishing.
 
 Output:
 1. changed files
