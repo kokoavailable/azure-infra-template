@@ -2,6 +2,12 @@
 
 글로벌 플랫폼 소유의 **공용 authoritative DNS Zone**(apex)과 선택적 TXT 레코드(ACME·도메인 검증 등)를 관리한다. Private DNS·허브 VNet은 다른 스택이다.
 
+## 이 스택의 목표 흐름
+
+1. **Zone 생성:** `root_domain_name`에 구매한 apex 도메인(예: `example.com`)을 넣고 apply → Azure Public DNS Zone이 생긴다.
+2. **위임:** 출력 `name_servers`에 나온 Azure 네임서버 4개를 **도메인 등록기관**에 apex NS로 등록한다. 그래야 인터넷 전체가 이 Zone을 authoritative로 본다.
+3. **레코드:** 앱/엣지 전용 A·CNAME·TXT는 **이 스택이 아니라** 각 edge/app OpenTofu 스택에서 같은 Zone에 리소스를 추가한다(아래 절). 이 스택에는 플랫폼이 미리 잡아 두고 싶은 TXT 등만 `txt_records`로 둔다.
+
 ## 파일별 역할
 
 | 파일 | 하는 일 |
@@ -47,6 +53,39 @@ terraform apply
 
 1. Apply 후 `terraform output name_servers` 에 나온 Azure 네임서버를 도메인 구매처(가비아, Route53, Cloudflare 등)에서 **apex NS 위임**으로 등록한다.
 2. 위임 전에는 이 Zone으로는 공용 해석이 되지 않는다. 위임 후 전파까지 수 분~수 시간 걸릴 수 있다.
+
+## Edge / 앱 스택에서 A·CNAME·TXT 추가
+
+이 스택의 출력 `resource_group_name`, `dns_zone_name`(또는 `dns_zone_id`)을 사용해, **다른 state**의 OpenTofu가 같은 구독에서 레코드만 만든다.
+
+1. **데이터로 Zone 참조** — RG 이름과 Zone 이름은 `terraform output`으로 옮기거나, 파이프라인 변수로 고정한다.
+
+```hcl
+data "azurerm_dns_zone" "public" {
+  name                = "example.com" # = output dns_zone_name
+  resource_group_name = "rg-myorg-shared-krc-dns-public" # = output resource_group_name
+}
+
+resource "azurerm_dns_a_record" "api_prod" {
+  name                = "api"
+  zone_name           = data.azurerm_dns_zone.public.name
+  resource_group_name = data.azurerm_dns_zone.public.resource_group_name
+  ttl                 = 300
+  records             = ["203.0.113.10"]
+}
+
+resource "azurerm_dns_cname_record" "cdn" {
+  name                = "cdn"
+  zone_name           = data.azurerm_dns_zone.public.name
+  resource_group_name = data.azurerm_dns_zone.public.resource_group_name
+  ttl                 = 300
+  record              = "myendpoint.azurefd.net"
+}
+```
+
+2. **state 연동(선택)** — edge 스택에서 `terraform_remote_state`로 `00-dns-public` state를 읽으면 `dns_zone_name` / `resource_group_name`을 출력에서 그대로 넘길 수 있다(백엔드가 같은 스토리지·다른 `key`여야 함).
+
+3. **권한** — edge/app를 실행하는 principal(파이프라인 SP, 사용자)에게 해당 DNS Zone(또는 RG)에 **DNS Zone Contributor** 등 레코드 쓰기가 가능한 역할이 있어야 한다. Zone은 이 스택이 만든 리소스이므로, 조직 정책에 맞게 역할 할당을 한 번 해 두면 이후 스택은 `apply`만 하면 된다.
 
 ## ACME(DNS-01)·검증 TXT
 

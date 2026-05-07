@@ -1,7 +1,8 @@
 SHELL := /usr/bin/env bash
 .DEFAULT_GOAL := help
 
-# Stack lifecycle targets use OpenTofu (`tofu`) and explicit -var-file injection (no symlink / no reliance on cwd auto-loading).
+# All HCL lifecycle targets (fmt / validate / test / plan / apply / destroy) use OpenTofu (`tofu`).
+# Explicit -var-file injection is used for plan/apply/destroy (no symlink / no reliance on cwd auto-loading).
 REPO_ROOT := $(shell git rev-parse --show-toplevel 2>/dev/null)
 SHARED_VARS := $(REPO_ROOT)/platform/terraform.shared.tfvars
 
@@ -36,7 +37,7 @@ help: ## Show available targets
 	@printf "  BOOTSTRAP_ENV=<name>   dev | stg | prod (bootstrap-state / teardown)\n"
 	@printf "  BOOTSTRAP_TEARDOWN_YES=1  required for bootstrap-state-teardown-*\n"
 	@printf "  BACKEND_CONFIG=<file>  optional; default backend.hcl if present in STACK\n"
-	@printf "  plan|apply|destroy (tofu): require platform/terraform.shared.tfvars + stack terraform.tfvars\n"
+	@printf "  plan|apply|destroy (tofu): require platform/terraform.shared.tfvars + stack terraform.tfvars and/or *.auto.tfvars\n"
 	@printf "  plan-here|apply-here|destroy-here: run from stack dir; same var-files\n\n"
 
 # ---------- Bootstrap (remote state storage) ----------
@@ -77,9 +78,8 @@ bootstrap-state-teardown-stg: ## Teardown bootstrap RG (stg); needs BOOTSTRAP_TE
 bootstrap-state-teardown-prod: ## Teardown bootstrap RG (prod); needs BOOTSTRAP_TEARDOWN_YES=1
 	@$(MAKE) bootstrap-state-teardown BOOTSTRAP_ENV=prod
 
-check-tools: ## Check required local binaries (OpenTofu for stack targets; Terraform fmt optional)
+check-tools: ## Check required local binaries (OpenTofu, Packer, pre-commit)
 	@command -v tofu >/dev/null || { echo "tofu (OpenTofu) not found"; exit 1; }
-	@command -v terraform >/dev/null || { echo "terraform not found (needed for fmt/validate targets)"; exit 1; }
 	@command -v packer >/dev/null || { echo "packer not found"; exit 1; }
 	@command -v pre-commit >/dev/null || { echo "pre-commit not found"; exit 1; }
 
@@ -89,11 +89,11 @@ pre-commit-install: ## Install git hooks locally
 # ---------- Format / Lint ----------
 
 fmt: ## Format Terraform (.tf) and Packer files across the repo
-	@terraform fmt -recursive
+	@tofu fmt -recursive
 	@find packer -type f -name '*.pkr.hcl' -print0 2>/dev/null | xargs -0 -r packer fmt
 
 fmt-check: ## Check Terraform formatting without writing (CI)
-	@terraform fmt -check -recursive
+	@tofu fmt -check -recursive
 
 docs-fmt: ## Format md/yaml/json with Prettier
 	@npm exec -- prettier --write "**/*.{md,yml,yaml,json}" --ignore-path .gitignore
@@ -102,7 +102,7 @@ docs-fmt: ## Format md/yaml/json with Prettier
 
 validate: ## Validate a single stack: make validate STACK=workloads/dev/...
 	@test -n "$(STACK)" || { echo "STACK is required"; exit 1; }
-	@cd $(STACK) && terraform init -backend=false -input=false && terraform validate
+	@cd $(STACK) && tofu init -backend=false -input=false && tofu validate
 
 validate-all: ## Validate every directory that contains *.tf files
 	@set -e; \
@@ -111,14 +111,14 @@ validate-all: ## Validate every directory that contains *.tf files
 	if [ -z "$$dirs" ]; then echo "No .tf files found; skip"; exit 0; fi; \
 	for d in $$dirs; do \
 	  echo "==> $$d"; \
-	  ( cd "$$d" && terraform init -backend=false -input=false >/dev/null && terraform validate ); \
+	  ( cd "$$d" && tofu init -backend=false -input=false >/dev/null && tofu validate ); \
 	done
 
 # ---------- Test ----------
 
-test: ## Run terraform test for a module: make test MODULE=modules/network
+test: ## Run tofu test for a module: make test MODULE=modules/network
 	@test -n "$(MODULE)" || { echo "MODULE is required"; exit 1; }
-	@cd $(MODULE) && terraform test
+	@cd $(MODULE) && tofu test
 
 # ---------- Docs ----------
 
@@ -127,65 +127,71 @@ docs: ## Refresh terraform-docs via pre-commit
 
 # ---------- Plan / Apply / Destroy (OpenTofu; explicit var-files) ----------
 
-plan: ## tofu plan: STACK=path from repo root; requires platform/terraform.shared.tfvars + stack terraform.tfvars
+plan: ## tofu plan: STACK=path from repo root; requires platform/terraform.shared.tfvars + stack terraform.tfvars and/or *.auto.tfvars
 	@test -n "$(STACK)" || { echo "STACK is required"; exit 1; }
 	@test -n "$(REPO_ROOT)" || { echo "git rev-parse failed — run inside the clone"; exit 1; }
 	@test -d "$(REPO_ROOT)/$(STACK)" || { echo "No such directory: $(STACK)"; exit 1; }
 	@test -f "$(SHARED_VARS)" || { echo "Missing $(SHARED_VARS) — copy platform/terraform.shared.tfvars.example"; exit 1; }
-	@test -f "$(REPO_ROOT)/$(STACK)/terraform.tfvars" || { echo "Missing $(REPO_ROOT)/$(STACK)/terraform.tfvars"; exit 1; }
+	@test -f "$(REPO_ROOT)/$(STACK)/terraform.tfvars" || ls "$(REPO_ROOT)/$(STACK)"/*.auto.tfvars >/dev/null 2>&1 || { echo "Missing $(REPO_ROOT)/$(STACK)/terraform.tfvars or at least one *.auto.tfvars"; exit 1; }
 	@cd "$(REPO_ROOT)/$(STACK)" && bc="$(BACKEND_CONFIG)"; \
 	  if [ -z "$$bc" ] && [ -f backend.hcl ]; then bc=backend.hcl; fi; \
 	  if [ -n "$$bc" ]; then tofu init -backend-config="$$bc"; else tofu init; fi && \
-	  tofu plan -var-file="$(SHARED_VARS)" -var-file=terraform.tfvars
+	  extra=""; if [ -f terraform.tfvars ]; then extra="-var-file=terraform.tfvars"; fi && \
+	  tofu plan -var-file="$(SHARED_VARS)" $$extra
 
 apply: ## tofu apply (same inputs as plan)
 	@test -n "$(STACK)" || { echo "STACK is required"; exit 1; }
 	@test -n "$(REPO_ROOT)" || { echo "git rev-parse failed — run inside the clone"; exit 1; }
 	@test -d "$(REPO_ROOT)/$(STACK)" || { echo "No such directory: $(STACK)"; exit 1; }
 	@test -f "$(SHARED_VARS)" || { echo "Missing $(SHARED_VARS) — copy platform/terraform.shared.tfvars.example"; exit 1; }
-	@test -f "$(REPO_ROOT)/$(STACK)/terraform.tfvars" || { echo "Missing $(REPO_ROOT)/$(STACK)/terraform.tfvars"; exit 1; }
+	@test -f "$(REPO_ROOT)/$(STACK)/terraform.tfvars" || ls "$(REPO_ROOT)/$(STACK)"/*.auto.tfvars >/dev/null 2>&1 || { echo "Missing $(REPO_ROOT)/$(STACK)/terraform.tfvars or at least one *.auto.tfvars"; exit 1; }
 	@cd "$(REPO_ROOT)/$(STACK)" && bc="$(BACKEND_CONFIG)"; \
 	  if [ -z "$$bc" ] && [ -f backend.hcl ]; then bc=backend.hcl; fi; \
 	  if [ -n "$$bc" ]; then tofu init -backend-config="$$bc"; else tofu init; fi && \
-	  tofu apply -var-file="$(SHARED_VARS)" -var-file=terraform.tfvars
+	  extra=""; if [ -f terraform.tfvars ]; then extra="-var-file=terraform.tfvars"; fi && \
+	  tofu apply -var-file="$(SHARED_VARS)" $$extra
 
 destroy: ## tofu destroy (same inputs as plan)
 	@test -n "$(STACK)" || { echo "STACK is required"; exit 1; }
 	@test -n "$(REPO_ROOT)" || { echo "git rev-parse failed — run inside the clone"; exit 1; }
 	@test -d "$(REPO_ROOT)/$(STACK)" || { echo "No such directory: $(STACK)"; exit 1; }
 	@test -f "$(SHARED_VARS)" || { echo "Missing $(SHARED_VARS) — copy platform/terraform.shared.tfvars.example"; exit 1; }
-	@test -f "$(REPO_ROOT)/$(STACK)/terraform.tfvars" || { echo "Missing $(REPO_ROOT)/$(STACK)/terraform.tfvars"; exit 1; }
+	@test -f "$(REPO_ROOT)/$(STACK)/terraform.tfvars" || ls "$(REPO_ROOT)/$(STACK)"/*.auto.tfvars >/dev/null 2>&1 || { echo "Missing $(REPO_ROOT)/$(STACK)/terraform.tfvars or at least one *.auto.tfvars"; exit 1; }
 	@cd "$(REPO_ROOT)/$(STACK)" && bc="$(BACKEND_CONFIG)"; \
 	  if [ -z "$$bc" ] && [ -f backend.hcl ]; then bc=backend.hcl; fi; \
 	  if [ -n "$$bc" ]; then tofu init -backend-config="$$bc"; else tofu init; fi && \
-	  tofu destroy -var-file="$(SHARED_VARS)" -var-file=terraform.tfvars
+	  extra=""; if [ -f terraform.tfvars ]; then extra="-var-file=terraform.tfvars"; fi && \
+	  tofu destroy -var-file="$(SHARED_VARS)" $$extra
 
-plan-here: ## tofu plan from current directory (must be a stack dir with terraform.tfvars)
+plan-here: ## tofu plan from current directory (stack dir: terraform.tfvars and/or *.auto.tfvars)
 	@test -n "$(REPO_ROOT)" || { echo "git rev-parse failed — run inside the clone"; exit 1; }
 	@test -f "$(SHARED_VARS)" || { echo "Missing $(SHARED_VARS) — copy platform/terraform.shared.tfvars.example"; exit 1; }
-	@test -f "$(CURDIR)/terraform.tfvars" || { echo "Missing $(CURDIR)/terraform.tfvars"; exit 1; }
+	@test -f "$(CURDIR)/terraform.tfvars" || ls "$(CURDIR)"/*.auto.tfvars >/dev/null 2>&1 || { echo "Missing $(CURDIR)/terraform.tfvars or at least one *.auto.tfvars"; exit 1; }
 	@cd "$(CURDIR)" && bc="$(BACKEND_CONFIG)"; \
 	  if [ -z "$$bc" ] && [ -f backend.hcl ]; then bc=backend.hcl; fi; \
 	  if [ -n "$$bc" ]; then tofu init -backend-config="$$bc"; else tofu init; fi && \
-	  tofu plan -var-file="$(SHARED_VARS)" -var-file=terraform.tfvars
+	  extra=""; if [ -f terraform.tfvars ]; then extra="-var-file=terraform.tfvars"; fi && \
+	  tofu plan -var-file="$(SHARED_VARS)" $$extra
 
 apply-here: ## tofu apply from current directory (same as plan-here)
 	@test -n "$(REPO_ROOT)" || { echo "git rev-parse failed — run inside the clone"; exit 1; }
 	@test -f "$(SHARED_VARS)" || { echo "Missing $(SHARED_VARS) — copy platform/terraform.shared.tfvars.example"; exit 1; }
-	@test -f "$(CURDIR)/terraform.tfvars" || { echo "Missing $(CURDIR)/terraform.tfvars"; exit 1; }
+	@test -f "$(CURDIR)/terraform.tfvars" || ls "$(CURDIR)"/*.auto.tfvars >/dev/null 2>&1 || { echo "Missing $(CURDIR)/terraform.tfvars or at least one *.auto.tfvars"; exit 1; }
 	@cd "$(CURDIR)" && bc="$(BACKEND_CONFIG)"; \
 	  if [ -z "$$bc" ] && [ -f backend.hcl ]; then bc=backend.hcl; fi; \
 	  if [ -n "$$bc" ]; then tofu init -backend-config="$$bc"; else tofu init; fi && \
-	  tofu apply -var-file="$(SHARED_VARS)" -var-file=terraform.tfvars
+	  extra=""; if [ -f terraform.tfvars ]; then extra="-var-file=terraform.tfvars"; fi && \
+	  tofu apply -var-file="$(SHARED_VARS)" $$extra
 
 destroy-here: ## tofu destroy from current directory
 	@test -n "$(REPO_ROOT)" || { echo "git rev-parse failed — run inside the clone"; exit 1; }
 	@test -f "$(SHARED_VARS)" || { echo "Missing $(SHARED_VARS) — copy platform/terraform.shared.tfvars.example"; exit 1; }
-	@test -f "$(CURDIR)/terraform.tfvars" || { echo "Missing $(CURDIR)/terraform.tfvars"; exit 1; }
+	@test -f "$(CURDIR)/terraform.tfvars" || ls "$(CURDIR)"/*.auto.tfvars >/dev/null 2>&1 || { echo "Missing $(CURDIR)/terraform.tfvars or at least one *.auto.tfvars"; exit 1; }
 	@cd "$(CURDIR)" && bc="$(BACKEND_CONFIG)"; \
 	  if [ -z "$$bc" ] && [ -f backend.hcl ]; then bc=backend.hcl; fi; \
 	  if [ -n "$$bc" ]; then tofu init -backend-config="$$bc"; else tofu init; fi && \
-	  tofu destroy -var-file="$(SHARED_VARS)" -var-file=terraform.tfvars
+	  extra=""; if [ -f terraform.tfvars ]; then extra="-var-file=terraform.tfvars"; fi && \
+	  tofu destroy -var-file="$(SHARED_VARS)" $$extra
 
 # ---------- Packer ----------
 
