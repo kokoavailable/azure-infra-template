@@ -15,10 +15,127 @@ The default behavior is:
 1. read `AGENTS.md`
 2. read the nearest scoped `AGENTS.md` when present
 3. inspect relevant files
-4. explain current structure and risk
-5. make the smallest safe change
-6. run safe formatting or validation commands when applicable
-7. review the diff before finishing
+4. maintain `.codex/session-notes/current.md` for non-trivial work
+5. explain current structure and risk
+6. make the smallest safe change
+7. run safe formatting or validation commands when applicable
+8. review the diff before finishing
+
+## Session Continuity
+
+Codex sessions are disposable. The repository must remain the source of truth for
+work state, decisions, validation, and next steps.
+
+For non-trivial work, keep `.codex/session-notes/current.md` updated as the task
+progresses. The note should include:
+
+- goal
+- files read
+- findings
+- changes
+- validation
+- next step
+- risks
+
+When a session is interrupted, the next Codex session should resume by reading:
+
+1. `AGENTS.md`
+2. the nearest scoped `AGENTS.md`
+3. `.codex/session-notes/current.md`
+4. `git status --short`
+5. `git diff`
+
+Archive completed notes under `.codex/session-notes/archive/` when useful. Do
+not use session notes to store secrets, real backend values, credentials, tenant
+IDs, subscription IDs, or production identifiers.
+
+## Troubleshooting Notes
+
+Session notes are short-lived recovery context. Troubleshooting notes are
+durable project memory.
+
+When a task exposes a recurring failure, blocked command, confusing workflow, or
+recovery procedure, add or update an entry under `docs/troubleshooting/`.
+
+A troubleshooting note should capture:
+
+- symptom
+- impact
+- affected files or commands
+- likely cause
+- mitigation used
+- permanent fix or follow-up
+- prevention signal
+
+Troubleshooting notes must stay sanitized. Do not record secrets, credentials,
+tenant IDs, subscription IDs, real backend values, production identifiers, or
+personal data.
+
+## Learning Notes
+
+Learning notes are for concepts the user actually struggled with during project
+work. They are not a general knowledge base.
+
+When a session exposes a concept that blocked progress or required explanation,
+append a short entry to `docs/learning/inbox.md` with:
+
+- concept
+- one-line definition
+- why it matters in this repository
+- file or command to revisit
+- five-minute review question
+
+Keep the daily volume small. Prefer three to five useful entries over a large
+set of generic flashcards.
+
+## Task History
+
+Task history is the durable chronology of completed or materially advanced work.
+It is separate from session notes.
+
+Use:
+
+- `.codex/session-notes/current.md` for the current task and restart context
+- `docs/task-history/` for completed work and follow-up continuity
+- `docs/troubleshooting/` for failures, diagnosis, mitigation, and prevention
+
+When a task finishes or reaches a meaningful checkpoint, add a short entry to
+the current monthly task history file. Each entry should capture:
+
+- task
+- status
+- changed files or areas
+- validation
+- follow-up
+- related troubleshooting or learning notes
+
+Keep entries factual and compact. Do not duplicate full postmortems or copy long
+diff summaries into task history.
+
+## Automation Boundary
+
+Codex may automate recording, summarizing, drafting, and verification support.
+
+Allowed automation:
+
+- command summaries
+- postmortem or troubleshooting drafts
+- runbook updates
+- diff review maps
+- concept extraction
+- review cards
+- checklists
+
+Human judgment remains required for:
+
+- final architecture decisions
+- security exceptions
+- RBAC scope decisions
+- production change approval
+- root-cause claims that have not been verified
+
+Separate facts from assumptions. Use `Possible cause` for unverified
+explanations.
 
 ## Operating modes
 

@@ -209,6 +209,10 @@ Relevant docs:
 - `docs/stack-conventions.md`
 - `docs/security-baseline.md`
 - `docs/runbook.md`
+- `docs/troubleshooting/README.md`
+- `docs/learning/inbox.md`
+- `docs/task-history/index.md`
+- `docs/roadmap.md`
 - `docs/release-strategy.md`
 - `docs/agent-workflow.md`
 - `docs/codex-workflow.md`
@@ -221,17 +225,20 @@ For non-trivial tasks:
 1. Read this file first.
 2. Read the nearest scoped `AGENTS.md`.
 3. Inspect relevant files.
-4. Do not edit immediately.
-5. Explain the current structure.
-6. Identify affected stacks, modules, or workflows.
-7. Identify risks and blast radius.
-8. Propose the smallest safe change.
-9. Implement only the requested scope.
-10. Run `make fmt` and `make docs-fmt` when applicable and safe.
-11. Run `make validate STACK=<stack-path>` when applicable.
-12. Run `make plan STACK=<stack-path>` only when credentials and backend are available and the user expects a plan.
-13. Review the diff.
-14. Summarize changed files, validation result, and remaining risks.
+4. Maintain `.codex/session-notes/current.md` with goal, files read, findings, changes, validation, next step, and risks.
+5. Do not edit immediately.
+6. Explain the current structure.
+7. Identify affected stacks, modules, or workflows.
+8. Identify risks and blast radius.
+9. Propose the smallest safe change.
+10. Implement only the requested scope.
+11. Run `make fmt` and `make docs-fmt` when applicable and safe.
+12. Run `make validate STACK=<stack-path>` when applicable.
+13. Run `make plan STACK=<stack-path>` only when credentials and backend are available and the user expects a plan.
+14. Add or update a troubleshooting note when the task exposes a recurring failure, blocked command, confusing workflow, or recovery procedure.
+15. Add or update `docs/task-history/` when a task is completed or materially advanced.
+16. Review the diff.
+17. Summarize changed files, validation result, and remaining risks.
 
 ## Review checklist
 

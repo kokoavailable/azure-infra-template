@@ -71,10 +71,13 @@ Codex or a human reviewer should:
 The repository ships prompt files under `.codex/prompts/`:
 
 - `architect.md`
+- `diff-review.md`
 - `investigate.md`
 - `implement.md`
+- `knowledge-compiler.md`
 - `validate.md`
 - `review.md`
+- `session-postmortem.md`
 - `portfolio.md`
 
 These prompts are lightweight wrappers around the repository rules and the role model in `docs/agent-workflow.md`. They should stay aligned with:
@@ -117,6 +120,23 @@ An AI-native PR should make the following easy to review:
 - how rollback would work
 
 Documentation-only and workflow-only PRs should stay documentation-only and workflow-only.
+
+## Knowledge Capture
+
+AI should turn repeated work and mistakes into reusable project knowledge.
+
+Use:
+
+- `docs/runbook.md` for repeatable procedures
+- `docs/troubleshooting/` for failures, diagnosis, recovery, and prevention
+- `docs/learning/inbox.md` for concepts the user actually struggled with
+- `docs/task-history/` for completed task chronology
+- `docs/codex-workflow.md` for agent operating rules
+- `.codex/session-notes/current.md` for temporary task context
+
+AI may draft summaries, notes, checklists, and review maps. Humans still own
+architecture judgment, security exceptions, permission boundaries, production
+approval, and final root-cause acceptance.
 
 ## Drift control
 
