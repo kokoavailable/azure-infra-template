@@ -10,11 +10,14 @@ STACK ?=
 MODULE ?=
 PACKER_TEMPLATE ?=
 PACKER_VARS ?=
+AGENT_OUT ?=
+TASK ?=
 # When set, plan/apply/destroy pass -backend-config=$(BACKEND_CONFIG). Empty = auto: use backend.hcl if that file exists in STACK.
 BACKEND_CONFIG ?=
 
 .PHONY: help check-tools pre-commit-install fmt fmt-check validate validate-all \
         test docs docs-fmt plan apply destroy plan-here apply-here destroy-here \
+        agent-operating-loop agent-diff-review agent-session-postmortem agent-knowledge-compile \
         packer-fmt packer-validate packer-build \
         bootstrap-state bootstrap-state-dev bootstrap-state-stg bootstrap-state-prod \
         bootstrap-state-teardown bootstrap-state-teardown-dev bootstrap-state-teardown-stg bootstrap-state-teardown-prod
@@ -22,6 +25,7 @@ BACKEND_CONFIG ?=
 BOOTSTRAP_DIR := scripts/bootstrap
 BOOTSTRAP_SCRIPT := $(BOOTSTRAP_DIR)/bootstrap-state-storage.sh
 BOOTSTRAP_TEARDOWN_SCRIPT := $(BOOTSTRAP_DIR)/bootstrap-state-teardown.sh
+AGENT_RENDER := scripts/agent/render-prompt.sh
 # dev | stg | prod — selects scripts/bootstrap/env/bootstrap-state.$(BOOTSTRAP_ENV).env
 BOOTSTRAP_ENV ?= dev
 # Set to 1 with make bootstrap-state-teardown to confirm RG deletion
@@ -34,6 +38,8 @@ help: ## Show available targets
 	@printf "  MODULE=<path>          e.g. modules/network\n"
 	@printf "  PACKER_TEMPLATE=<file> e.g. packer/build-runtime-base.pkr.hcl\n"
 	@printf "  PACKER_VARS=<file>     e.g. packer/dev.auto.pkrvars.hcl\n"
+	@printf "  AGENT_OUT=<file>       optional output file for agent-* prompt bundles\n"
+	@printf "  TASK=<text>            optional user task for agent-operating-loop\n"
 	@printf "  BOOTSTRAP_ENV=<name>   dev | stg | prod (bootstrap-state / teardown)\n"
 	@printf "  BOOTSTRAP_TEARDOWN_YES=1  required for bootstrap-state-teardown-*\n"
 	@printf "  BACKEND_CONFIG=<file>  optional; default backend.hcl if present in STACK\n"
@@ -124,6 +130,20 @@ test: ## Run tofu test for a module: make test MODULE=modules/network
 
 docs: ## Refresh terraform-docs via pre-commit
 	@pre-commit run terraform_docs -a
+
+# ---------- Agent workflows ----------
+
+agent-operating-loop: ## Render prompt bundle that separates automation from human judgment gates
+	@AGENT_OUT="$(AGENT_OUT)" TASK="$(TASK)" bash "$(AGENT_RENDER)" operating-loop .codex/prompts/operating-loop.md
+
+agent-diff-review: ## Render prompt bundle for reviewer-style diff analysis
+	@AGENT_OUT="$(AGENT_OUT)" bash "$(AGENT_RENDER)" diff-review .codex/prompts/diff-review.md
+
+agent-session-postmortem: ## Render prompt bundle for session postmortem/troubleshooting draft
+	@AGENT_OUT="$(AGENT_OUT)" bash "$(AGENT_RENDER)" session-postmortem .codex/prompts/session-postmortem.md
+
+agent-knowledge-compile: ## Render prompt bundle for end-of-day knowledge compilation
+	@AGENT_OUT="$(AGENT_OUT)" bash "$(AGENT_RENDER)" knowledge-compile .codex/prompts/knowledge-compiler.md
 
 # ---------- Plan / Apply / Destroy (OpenTofu; explicit var-files) ----------
 

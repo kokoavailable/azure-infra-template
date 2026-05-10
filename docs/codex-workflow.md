@@ -137,6 +137,41 @@ Human judgment remains required for:
 Separate facts from assumptions. Use `Possible cause` for unverified
 explanations.
 
+## Makefile Agent Workflows
+
+The repository exposes repeatable agent workflow entrypoints through the
+Makefile. These targets render a prompt plus relevant repository context. They
+do not apply infrastructure changes and do not make approval decisions.
+
+Use:
+
+```bash
+make agent-operating-loop TASK="describe the next task"
+make agent-diff-review
+make agent-session-postmortem
+make agent-knowledge-compile
+```
+
+To save a rendered bundle:
+
+```bash
+make agent-diff-review AGENT_OUT=.codex/agent-runs/diff-review.md
+```
+
+These targets are the Level 4 bridge between prompt files and repeatable
+operator workflows. A human still decides whether to accept the generated review,
+postmortem, task-history update, or learning entry.
+
+The highest-level loop is `make agent-operating-loop`. Use it before ambiguous
+or high-risk work. It should separate:
+
+- the essence of the work
+- the affected repository boundary
+- automatable tasks
+- human decision gates
+- validation plan
+- stop conditions
+
 ## Operating modes
 
 ### Architect

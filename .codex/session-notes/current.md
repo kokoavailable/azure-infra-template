@@ -2,7 +2,7 @@
 
 ## Goal
 
-- Align platform management and identity stack READMEs with repository Makefile and platform change requirements.
+- Add the final operating-loop agent entrypoint that separates automation from human judgment gates.
 
 ## Files Read
 
@@ -24,6 +24,11 @@
 - `platform/identity/02-identity-federation/locals.tf`
 - `.codex/prompts/review.md`
 - `.codex/prompts/validate.md`
+- `.codex/prompts/diff-review.md`
+- `.codex/prompts/session-postmortem.md`
+- `.codex/prompts/knowledge-compiler.md`
+- `.codex/prompts/operating-loop.md`
+- `Makefile`
 
 ## Findings
 
@@ -40,14 +45,18 @@
 - Platform change requirements need affected scope, blast radius, validation command, rollback note, and remaining risk.
 - `platform/identity/02-identity-federation/README.md` also used raw `terraform` commands instead of the repository Makefile interface.
 - The identity stack creates Entra application/service principal resources, GitHub federated credentials, subscription RBAC, and optional tfstate Blob RBAC.
+- Prompt files existed, but there were no Makefile targets that rendered prompt-plus-context bundles.
+- Level 4 targets rendered specific bundles, but there was no top-level entrypoint for ambiguous work that identifies essence, automation candidates, human gates, validation, and stop conditions.
 
 ## Changes
 
-- Replaced raw `terraform` examples in `platform/management/03-policy-governance/README.md` with Makefile commands.
-- Added platform change requirements for affected path, affected Azure scope, blast radius, validation command, rollback note, and remaining risk.
-- Clarified that `plan` requires expected credentials/backend access and `apply` requires explicit approval.
-- Replaced raw `terraform` examples in `platform/identity/02-identity-federation/README.md` with Makefile commands.
-- Added OIDC/RBAC-specific affected scope, blast radius, rollback note, and remaining risk for the identity stack.
+- Added `scripts/agent/render-prompt.sh` to render agent workflow bundles.
+- Added `make agent-diff-review`.
+- Added `make agent-session-postmortem`.
+- Added `make agent-knowledge-compile`.
+- Added `.codex/prompts/operating-loop.md`.
+- Added `make agent-operating-loop` with optional `TASK=<text>` support.
+- Documented executable agent workflows in `docs/codex-workflow.md`, `docs/ai-native-workflow.md`, and `docs/roadmap.md`.
 
 ## Validation
 
@@ -63,13 +72,20 @@
 - `make validate STACK=platform/management/03-policy-governance` passed with provider registry access.
 - `npx prettier --check platform/identity/02-identity-federation/README.md` passed.
 - `make validate STACK=platform/identity/02-identity-federation` passed with provider registry access.
+- `bash -n scripts/agent/render-prompt.sh` passed.
+- `make help` showed the new `agent-*` targets.
+- `make agent-diff-review AGENT_OUT=/private/tmp/agent-diff-review.md` generated a bundle.
+- `make agent-session-postmortem AGENT_OUT=/private/tmp/agent-session-postmortem.md` generated a bundle.
+- `make agent-knowledge-compile AGENT_OUT=/private/tmp/agent-knowledge-compile.md` generated a bundle.
+- `npx prettier --check docs/codex-workflow.md docs/ai-native-workflow.md docs/roadmap.md docs/task-history/2026-05.md .codex/session-notes/current.md` passed.
+- `make agent-operating-loop TASK='decide the next platform task safely' AGENT_OUT=/private/tmp/agent-operating-loop.md` generated a bundle.
+- `npx prettier --check .codex/prompts/operating-loop.md docs/codex-workflow.md docs/ai-native-workflow.md docs/roadmap.md docs/task-history/2026-05.md .codex/session-notes/current.md` passed.
 
 ## Next Step
 
-- Review README diffs and task history update.
+- Validate Makefile agent targets and update task history.
 
 ## Risks
 
-- This README change does not modify infrastructure code or state.
-- The management stack affects subscription-scope Azure Policy when applied, so plan/apply still require explicit review and approval.
-- The identity stack affects OIDC trust and RBAC when applied; branch subjects, audience, and role scope need explicit review before plan/apply.
+- Agent targets render prompt bundles only; they do not invoke apply, commit files, or make approval decisions.
+- Rendered bundles may include local diffs, so they should be reviewed before sharing outside the working context.

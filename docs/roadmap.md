@@ -35,6 +35,9 @@ Tasks:
 
 - Keep `AGENTS.md` and scoped `AGENTS.md` files aligned.
 - Keep `.codex/prompts/` aligned with the role workflow.
+- Keep Makefile `agent-*` targets aligned with reusable prompt workflows.
+- Use `make agent-operating-loop` to route ambiguous work into automation and
+  human judgment gates.
 - Maintain `.codex/session-notes/current.md` for non-trivial work.
 - Maintain `docs/task-history/` for completed task chronology.
 - Use `docs/troubleshooting/` for recurring failures and recovery patterns.
@@ -46,6 +49,8 @@ Done when:
 
 - Codex can resume from session notes after interruption.
 - Completed tasks have concise history entries.
+- Agent workflow prompts can be rendered through Makefile targets.
+- Ambiguous work can be converted into a reviewed operating loop before edits.
 - Documentation and prompt updates have targeted formatting checks.
 - Troubleshooting notes exist for recurring workflow failures.
 

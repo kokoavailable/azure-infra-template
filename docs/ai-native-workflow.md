@@ -138,6 +138,34 @@ AI may draft summaries, notes, checklists, and review maps. Humans still own
 architecture judgment, security exceptions, permission boundaries, production
 approval, and final root-cause acceptance.
 
+## Executable Agent Workflows
+
+Prompt files under `.codex/prompts/` are connected to Makefile targets:
+
+- `make agent-operating-loop`
+- `make agent-diff-review`
+- `make agent-session-postmortem`
+- `make agent-knowledge-compile`
+
+Each target renders an agent-ready bundle with the prompt and relevant local
+context such as session notes, git status, diffs, task history, troubleshooting
+index, or learning inbox.
+
+Use `AGENT_OUT=<file>` to save the bundle for review or reuse. These targets
+prepare agent work; they do not approve infrastructure changes, run apply, or
+commit generated notes automatically.
+
+Use `make agent-operating-loop` as the default entrypoint when the next action is
+unclear. It turns a user request into a structured operating loop:
+
+- essence
+- boundary
+- automatable work
+- human judgment gates
+- validation
+- documentation updates
+- next tasks
+
 ## Drift control
 
 To avoid instruction drift:
