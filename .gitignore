@@ -53,6 +53,9 @@ packer/manifests/*.manifest.json
 # Bootstrap state env (tracked: *.env.example only)
 scripts/bootstrap/env/bootstrap-state.*.env
 
+# Generated Codex/agent run bundles may include local diffs and task context.
+.codex/agent-runs/
+
 # ── Secrets / certs ──
 .env
 .env.*

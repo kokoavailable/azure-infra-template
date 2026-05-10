@@ -215,6 +215,7 @@ Relevant docs:
 - `docs/roadmap.md`
 - `docs/release-strategy.md`
 - `docs/agent-workflow.md`
+- `docs/agent-operating-guide.md`
 - `docs/codex-workflow.md`
 - `docs/ai-native-workflow.md`
 

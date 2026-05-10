@@ -2,7 +2,7 @@
 
 ## Goal
 
-- Add the final operating-loop agent entrypoint that separates automation from human judgment gates.
+- Complete the next safe platform task after management and identity README handoff: public DNS README handoff and validation.
 
 ## Files Read
 
@@ -22,6 +22,12 @@
 - `platform/identity/02-identity-federation/variables.tf`
 - `platform/identity/02-identity-federation/outputs.tf`
 - `platform/identity/02-identity-federation/locals.tf`
+- `platform/connectivity/global/00-dns-public/README.md`
+- `platform/connectivity/global/00-dns-public/main.tf`
+- `platform/connectivity/global/00-dns-public/variables.tf`
+- `platform/connectivity/global/00-dns-public/outputs.tf`
+- `platform/connectivity/global/00-dns-public/locals.tf`
+- `platform/connectivity/global/00-dns-public/terraform.tfvars.example`
 - `.codex/prompts/review.md`
 - `.codex/prompts/validate.md`
 - `.codex/prompts/diff-review.md`
@@ -47,16 +53,15 @@
 - The identity stack creates Entra application/service principal resources, GitHub federated credentials, subscription RBAC, and optional tfstate Blob RBAC.
 - Prompt files existed, but there were no Makefile targets that rendered prompt-plus-context bundles.
 - Level 4 targets rendered specific bundles, but there was no top-level entrypoint for ambiguous work that identifies essence, automation candidates, human gates, validation, and stop conditions.
+- `platform/connectivity/global/00-dns-public/README.md` used raw `terraform` commands instead of the repository Makefile interface.
+- Public DNS has an external human gate: registrar NS delegation is outside Azure state and must not be treated as automatic.
+- Generated `.codex/agent-runs/` bundles may include local diff/context and should not be committed.
 
 ## Changes
 
-- Added `scripts/agent/render-prompt.sh` to render agent workflow bundles.
-- Added `make agent-diff-review`.
-- Added `make agent-session-postmortem`.
-- Added `make agent-knowledge-compile`.
-- Added `.codex/prompts/operating-loop.md`.
-- Added `make agent-operating-loop` with optional `TASK=<text>` support.
-- Documented executable agent workflows in `docs/codex-workflow.md`, `docs/ai-native-workflow.md`, and `docs/roadmap.md`.
+- Replaced raw `terraform` examples in `platform/connectivity/global/00-dns-public/README.md` with Makefile commands.
+- Added public DNS-specific affected scope, blast radius, rollback note, remaining risk, and registrar delegation human gate.
+- Added `.codex/agent-runs/` to `.gitignore`.
 
 ## Validation
 
@@ -80,12 +85,14 @@
 - `npx prettier --check docs/codex-workflow.md docs/ai-native-workflow.md docs/roadmap.md docs/task-history/2026-05.md .codex/session-notes/current.md` passed.
 - `make agent-operating-loop TASK='decide the next platform task safely' AGENT_OUT=/private/tmp/agent-operating-loop.md` generated a bundle.
 - `npx prettier --check .codex/prompts/operating-loop.md docs/codex-workflow.md docs/ai-native-workflow.md docs/roadmap.md docs/task-history/2026-05.md .codex/session-notes/current.md` passed.
+- `make validate STACK=platform/connectivity/global/00-dns-public` passed with provider registry access.
+- `npx prettier --write platform/connectivity/global/00-dns-public/README.md` completed.
 
 ## Next Step
 
-- Validate Makefile agent targets and update task history.
+- Review DNS README handoff diff and update task history.
 
 ## Risks
 
-- Agent targets render prompt bundles only; they do not invoke apply, commit files, or make approval decisions.
-- Rendered bundles may include local diffs, so they should be reviewed before sharing outside the working context.
+- This README change does not modify infrastructure code or state.
+- The public DNS stack affects apex DNS and registrar delegation when applied; apply and registrar changes remain human decision gates.
