@@ -2,11 +2,7 @@
 
 ## Goal
 
-- Maintain restart-safe Codex workflow context for non-trivial repository work.
-- Add a durable troubleshooting notes system for recurring project problems.
-- Add a lightweight learning and agent-prompt system for postmortems, diff review, and end-of-day knowledge compilation.
-- Add a durable project roadmap that captures completion phases, tasks, and validation gates.
-- Add durable task history so completed work is preserved chronologically.
+- Align platform management and identity stack READMEs with repository Makefile and platform change requirements.
 
 ## Files Read
 
@@ -18,6 +14,14 @@
 - `docs/release-strategy.md`
 - `docs/architecture.md`
 - `docs/roadmap.md`
+- `platform/AGENTS.md`
+- `platform/management/03-policy-governance/README.md`
+- `platform/identity/README.md`
+- `platform/identity/02-identity-federation/README.md`
+- `platform/identity/02-identity-federation/main.tf`
+- `platform/identity/02-identity-federation/variables.tf`
+- `platform/identity/02-identity-federation/outputs.tf`
+- `platform/identity/02-identity-federation/locals.tf`
 - `.codex/prompts/review.md`
 - `.codex/prompts/validate.md`
 
@@ -32,23 +36,18 @@
 - `AGENTS.md` has a current implementation focus list, but there is no dedicated roadmap with milestones, tasks, and done criteria.
 - `docs/release-strategy.md` covers safe promotion and rollback, not the full project completion path.
 - There is no durable task history file; `session-notes` captures current work only.
+- `platform/management/03-policy-governance/README.md` used raw `terraform` commands instead of the repository Makefile interface.
+- Platform change requirements need affected scope, blast radius, validation command, rollback note, and remaining risk.
+- `platform/identity/02-identity-federation/README.md` also used raw `terraform` commands instead of the repository Makefile interface.
+- The identity stack creates Entra application/service principal resources, GitHub federated credentials, subscription RBAC, and optional tfstate Blob RBAC.
 
 ## Changes
 
-- Added a non-trivial task requirement to maintain `.codex/session-notes/current.md`.
-- Documented session interruption recovery in `docs/codex-workflow.md`.
-- Added this reusable current-session template.
-- Added `docs/troubleshooting/` with index, template, and first note for the `make docs-fmt` EPERM failure.
-- Updated `AGENTS.md`, `docs/codex-workflow.md`, and `docs/runbook.md` to require troubleshooting notes for recurring failures and recovery procedures.
-- Added `docs/troubleshooting/index.md` as the troubleshooting entry point.
-- Added `docs/learning/inbox.md` for concepts the user actually struggled with.
-- Added reusable prompts for diff review, session postmortem, and end-of-day knowledge compilation.
-- Updated AI workflow docs to separate runbook, troubleshooting, learning, codex workflow, and session notes.
-- Added `docs/roadmap.md` with project phases, tasks, done criteria, validation gates, and current next tasks.
-- Linked `docs/roadmap.md` from `AGENTS.md`.
-- Added `docs/task-history/index.md` and `docs/task-history/2026-05.md`.
-- Recorded the restart-safe workflow, troubleshooting system, learning/prompt system, and roadmap tasks in task history.
-- Updated workflow docs so completed or materially advanced tasks update `docs/task-history/`.
+- Replaced raw `terraform` examples in `platform/management/03-policy-governance/README.md` with Makefile commands.
+- Added platform change requirements for affected path, affected Azure scope, blast radius, validation command, rollback note, and remaining risk.
+- Clarified that `plan` requires expected credentials/backend access and `apply` requires explicit approval.
+- Replaced raw `terraform` examples in `platform/identity/02-identity-federation/README.md` with Makefile commands.
+- Added OIDC/RBAC-specific affected scope, blast radius, rollback note, and remaining risk for the identity stack.
 
 ## Validation
 
@@ -60,14 +59,17 @@
 - `npx prettier --check AGENTS.md docs/codex-workflow.md docs/ai-native-workflow.md docs/runbook.md docs/troubleshooting/README.md docs/troubleshooting/index.md docs/troubleshooting/template.md docs/troubleshooting/2026-05-10-docs-fmt-eperm.md docs/learning/inbox.md .codex/prompts/diff-review.md .codex/prompts/session-postmortem.md .codex/prompts/knowledge-compiler.md .codex/session-notes/current.md` passed.
 - `npx prettier --check AGENTS.md docs/roadmap.md .codex/session-notes/current.md` passed.
 - `npx prettier --check AGENTS.md docs/codex-workflow.md docs/ai-native-workflow.md docs/roadmap.md docs/task-history/index.md docs/task-history/2026-05.md .codex/session-notes/current.md` passed.
+- `npx prettier --check platform/management/03-policy-governance/README.md` passed.
+- `make validate STACK=platform/management/03-policy-governance` passed with provider registry access.
+- `npx prettier --check platform/identity/02-identity-federation/README.md` passed.
+- `make validate STACK=platform/identity/02-identity-federation` passed with provider registry access.
 
 ## Next Step
 
-- Review the resulting diff.
+- Review README diffs and task history update.
 
 ## Risks
 
-- Session notes must not contain secrets, backend values, tenant IDs, subscription IDs, credentials, or production identifiers.
-- Session notes can become stale if agents do not update them as work progresses.
-- Troubleshooting notes must stay sanitized and should avoid preserving machine-specific secrets or sensitive identifiers.
-- Learning notes can become noise if they capture generic concepts instead of concepts that actually caused confusion.
+- This README change does not modify infrastructure code or state.
+- The management stack affects subscription-scope Azure Policy when applied, so plan/apply still require explicit review and approval.
+- The identity stack affects OIDC trust and RBAC when applied; branch subjects, audience, and role scope need explicit review before plan/apply.
