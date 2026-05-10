@@ -5,6 +5,7 @@ Use this index to find reusable failure diagnosis and recovery notes.
 ## Documentation Workflow
 
 - [`make docs-fmt` fails on `.codex/prompts` with `EPERM`](2026-05-10-docs-fmt-eperm.md)
+- [Agent workflow drifts into documentation loop](2026-05-10-agent-workflow-documentation-loop.md)
 - [Task history entry left with pending validation after interrupted turn](2026-05-10-task-history-validation-pending.md)
 
 ## Add New Notes

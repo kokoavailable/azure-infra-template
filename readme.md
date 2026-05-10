@@ -268,7 +268,7 @@ azure-infra-template/  # Azure 플랫폼 인프라 저장소 루트. OpenTofu �
 │       ├── private_endpoint.tf  # Private Endpoint 연결 정의 파일. 서비스 노출을 private path로 제한하는 네트워크 경계.
 │       ├── private_dns.tf  # DB용 private DNS zone 또는 레코드 연동 책임 파일.
 │       ├── cmk.tf  # Customer Managed Key(CMK) 연동 정의 파일.
-│       ├── diagnostics.tf  # 진단 로그/메트릭 전송 설정 파일. Log Analytics/Storage/Event Hub 연계 책임.
+│       ├── diagnostics.tf  # 진단 로그/메트릭울 전송 설정 파일. Log Analytics/Storage/Event Hub 연계 책임.
 │       └── tests/  # 모듈 테스트 디렉터리. `tofu test`용 검증 시나리오를 두는 경계.
 │           └── basic.tftest.hcl  # 기본 테스트 시나리오. `tofu test`로 실제 인프라를 띄워 assertions를 검증하는 테스트 파일.
 │

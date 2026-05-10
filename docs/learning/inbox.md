@@ -37,3 +37,15 @@ Keep entries short and operational. Prefer three to five useful entries per day.
 - Revisit: `docs/troubleshooting/2026-05-10-docs-fmt-eperm.md`
 - Five-minute review: Why is a targeted Prettier check safer than accepting a
   broad partial formatting diff after a failed command?
+
+## 2026-05-10 - Agent Context Bundle vs Implementation Loop
+
+- Definition: An agent context bundle packages instructions and repo state for
+  review; an implementation loop actually changes repo files, validates them,
+  reviews the diff, and records only useful knowledge.
+- Why it matters here: `make agent-operating-loop` helps structure the next
+  action, but it does not itself implement the platform stack.
+- Revisit: `Makefile`, `.codex/prompts/operating-loop.md`,
+  `docs/troubleshooting/2026-05-10-agent-workflow-documentation-loop.md`
+- Five-minute review: When should an agent workflow stop generating context and
+  start changing the next project file?

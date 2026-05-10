@@ -1,0 +1,14 @@
+# subscription_id / tenant_id: set once in ../../../../../terraform.shared.tfvars;
+# repo-root `make plan|apply STACK=platform/connectivity/kr/koreacentral/hub/00-hub-network` loads it automatically.
+
+organization = "myorg"
+
+# CIDR and subnet choices are architecture decisions. Review and approve them before plan/apply.
+hub_address_space = ["10.0.0.0/20"]
+
+hub_subnets = {
+  shared = {
+    name             = "snet-shared"
+    address_prefixes = ["10.0.0.0/24"]
+  }
+}

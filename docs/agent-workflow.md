@@ -68,7 +68,6 @@ Outputs:
 - required fixes
 - verification commands
 - merge readiness
-
 ### Portfolio Curator
 
 Use after a PR or milestone to turn engineering work into interview-ready evidence.
