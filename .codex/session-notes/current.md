@@ -2,7 +2,7 @@
 
 ## Goal
 
-- Complete the next safe platform task after management and identity README handoff: public DNS README handoff and validation.
+- Complete the next safe platform task after management, identity, and public DNS handoff: hub network scaffold README handoff.
 
 ## Files Read
 
@@ -28,6 +28,9 @@
 - `platform/connectivity/global/00-dns-public/outputs.tf`
 - `platform/connectivity/global/00-dns-public/locals.tf`
 - `platform/connectivity/global/00-dns-public/terraform.tfvars.example`
+- `platform/connectivity/kr/koreacentral/hub/00-hub-network/README.md`
+- `platform/connectivity/kr/koreacentral/hub/05-private-dns/README.md`
+- `platform/connectivity/kr/koreacentral/hub/10-egress-routing-security/README.md`
 - `.codex/prompts/review.md`
 - `.codex/prompts/validate.md`
 - `.codex/prompts/diff-review.md`
@@ -56,12 +59,16 @@
 - `platform/connectivity/global/00-dns-public/README.md` used raw `terraform` commands instead of the repository Makefile interface.
 - Public DNS has an external human gate: registrar NS delegation is outside Azure state and must not be treated as automatic.
 - Generated `.codex/agent-runs/` bundles may include local diff/context and should not be committed.
+- `platform/connectivity/kr/koreacentral/hub/00-hub-network` is a README-only scaffold with no `.tf` files yet.
+- Hub network design has human decision gates for CIDR, subnet layout, peering, routes, firewall, Bastion, and production connectivity assumptions.
 
 ## Changes
 
 - Replaced raw `terraform` examples in `platform/connectivity/global/00-dns-public/README.md` with Makefile commands.
 - Added public DNS-specific affected scope, blast radius, rollback note, remaining risk, and registrar delegation human gate.
 - Added `.codex/agent-runs/` to `.gitignore`.
+- Expanded `platform/connectivity/kr/koreacentral/hub/00-hub-network/README.md` from a one-line scaffold into an implementation contract with scope, dependency direction, human gates, platform change requirements, and validation gap.
+- Updated task history validation that was left pending after an interrupted turn.
 
 ## Validation
 
@@ -87,12 +94,14 @@
 - `npx prettier --check .codex/prompts/operating-loop.md docs/codex-workflow.md docs/ai-native-workflow.md docs/roadmap.md docs/task-history/2026-05.md .codex/session-notes/current.md` passed.
 - `make validate STACK=platform/connectivity/global/00-dns-public` passed with provider registry access.
 - `npx prettier --write platform/connectivity/global/00-dns-public/README.md` completed.
+- `npx prettier --write platform/connectivity/kr/koreacentral/hub/00-hub-network/README.md` completed.
 
 ## Next Step
 
-- Review DNS README handoff diff and update task history.
+- Validate hub network README handoff and update task history.
 
 ## Risks
 
 - This README change does not modify infrastructure code or state.
 - The public DNS stack affects apex DNS and registrar delegation when applied; apply and registrar changes remain human decision gates.
+- Hub network implementation decisions remain human gates; this task only changes documentation.
