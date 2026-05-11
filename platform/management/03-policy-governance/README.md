@@ -25,7 +25,7 @@
 ## 사전 조건
 
 1. 다른 스택과 같이 원격 state 백엔드가 준비되어 있어야 한다(`scripts/bootstrap/bootstrap-state-storage.sh` 등).
-2. `backend.hcl`에 이 스택 전용 **`key`** 를 둔다(예: `platform/management/03-policy-governance.tfstate`). 팀 템플릿은 `stacks/_stack-template/backend.hcl.example` 참고.
+2. `backend.hcl`에 이 스택 전용 **`key`** 를 둔다(예: `platform/management/03-policy-governance.tfstate`). 팀 템플릿은 `templates/_stack-template/backend.hcl.example` 참고.
 3. `terraform.tfvars.example` → **`terraform.tfvars`** 복사 후 `subscription_id`, `tenant_id` 등 입력.
 
 **권한:** 대상 구독에서 정책 할당을 만들 수 있어야 한다. 예: 구독 범위 **Owner**, **Contributor**, 또는 **리소스 정책 기여자(Resource Policy Contributor)** 등 `Microsoft.Authorization/policyAssignments/write` 가 포함된 역할.

@@ -323,16 +323,16 @@ Disallowed without explicit user request:
 Codex should reason in repository boundaries before editing:
 
 - `platform/` is shared and high blast radius
-- `spokes/` is workload and environment specific
-- `stacks/` defines reusable conventions and templates
+- `stacks/` contains deployed environment hub-and-spoke stacks
+- `templates/` defines reusable conventions and templates
 - `scripts/bootstrap/` is bootstrap-only and should remain deliberate
 - `docs/` is part of the architecture contract, not optional cleanup
 
 Dependency direction must remain:
 
 1. platform prerequisites
-2. hub or shared connectivity
-3. spoke network and configuration
+2. environment hub connectivity
+3. environment spoke network and configuration
 4. data services
 5. compute
 6. observability

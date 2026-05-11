@@ -192,5 +192,5 @@ move is usually one of:
 
 - run `make agent-diff-review` and review the current diff
 - continue platform connectivity handoff with
-  `platform/connectivity/kr/koreacentral/hub/00-hub-network`
+  `stacks/dev/kr/koreacentral/hub/00-hub-network`
 - fix or intentionally scope the known `make docs-fmt` formatting blocker

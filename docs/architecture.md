@@ -14,11 +14,11 @@ The following choices are **locked for this repository** unless superseded by an
 | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Environments              | `dev`, `stg`, `prod`                                                                                                                                            |
 | Region (initial)          | Korea Central (`koreacentral`); directory layout uses `kr/koreacentral/` under regional paths                                                                   |
-| Hubs per region           | **One** hub virtual network per region (single regional connectivity anchor)                                                                                    |
+| Hubs per region           | **One hub virtual network per environment per region**; each execution environment owns its hub-and-spoke boundary                                              |
 | Spoke boundaries          | Workload-oriented spokes such as `app-main`, `shared-airflow`, `shared-observability` — each owns its network slice and workload stacks                         |
 | Network plan              | Non-overlapping RFC1918 ranges; hub and each spoke receive dedicated reservations (see below)                                                                   |
 | Public DNS                | **Global** platform ownership (`platform/connectivity/global/`)                                                                                                 |
-| Private DNS               | **Hub-centric**: zones and resolution posture owned from the hub; spokes link/consume per strategy                                                              |
+| Private DNS               | **Environment hub-centric**: zones and resolution posture are owned from each environment hub; spokes link/consume per strategy                                 |
 | Private endpoints         | Created in the **spoke** where the service lives; **DNS registration and private zone linkage** follow the hub-aligned model in `dns-strategy.md`               |
 | Ingress                   | Per-app **Application Gateway + WAF** (and related edge objects) live in the **spoke**                                                                          |
 | Egress / central security | **Azure Firewall**, forced tunnel / route intent, **NAT** where applicable, **Bastion** or shared ops access patterns live in the **hub** (or hub-owned stacks) |
@@ -28,22 +28,26 @@ The following choices are **locked for this repository** unless superseded by an
 
 Ranges are illustrative until allocated in IPAM; the **rules** are: no overlap between hub and spokes, no overlap across spokes, and reserve space for growth within each spoke.
 
-| Scope                              | Example reservation | Notes                                                               |
-| ---------------------------------- | ------------------- | ------------------------------------------------------------------- |
-| Hub (Korea Central)                | `10.200.0.0/16`     | Firewall, Bastion, gateway subnets, shared DMZ patterns as designed |
-| Spoke `dev` / `app-main`           | `10.210.0.0/16`     | Dev workload; subdivide into subnets per layer                      |
-| Spoke `stg` / `app-main`           | `10.211.0.0/16`     | Staging                                                             |
-| Spoke `prod` / `app-main`          | `10.212.0.0/16`     | Production app                                                      |
-| Spoke `*` / `shared-observability` | `10.213.0.0/16`     | Slice per env under `spokes/<env>/shared-observability/`            |
-| Spoke `*` / `shared-airflow`       | `10.214.0.0/16`     | Slice per env                                                       |
+| Scope                              | Example reservation | Notes                                                                           |
+| ---------------------------------- | ------------------- | ------------------------------------------------------------------------------- |
+| Hub `dev` (Korea Central)          | `10.200.0.0/16`     | Dev firewall, Bastion, gateway subnets, shared DMZ patterns as designed         |
+| Hub `stg` (Korea Central)          | `10.201.0.0/16`     | Staging hub reservation                                                         |
+| Hub `prod` (Korea Central)         | `10.202.0.0/16`     | Production hub reservation                                                      |
+| Spoke `dev` / `app-main`           | `10.210.0.0/16`     | Dev workload; subdivide into subnets per layer                                  |
+| Spoke `stg` / `app-main`           | `10.211.0.0/16`     | Staging                                                                         |
+| Spoke `prod` / `app-main`          | `10.212.0.0/16`     | Production app                                                                  |
+| Spoke `*` / `shared-observability` | `10.213.0.0/16`     | Slice per env under `stacks/<env>/kr/koreacentral/spokes/shared-observability/` |
+| Spoke `*` / `shared-airflow`       | `10.214.0.0/16`     | Slice per env                                                                   |
 
 Adjust numbers in IPAM; keep **documentation and Terraform locals** in sync when values change.
 
 ### Repository layout (regions and paths)
 
-- Platform connectivity: `platform/connectivity/global/…` (public DNS) and `platform/connectivity/kr/koreacentral/hub/…` (hub network, private DNS posture, egress, shared access).
+- Platform connectivity: `platform/connectivity/global/…` (public DNS and explicitly shared global primitives).
+- Environment hubs: `stacks/<env>/kr/koreacentral/hub/…` (hub network, private DNS posture, egress, shared access for that environment).
 - Platform shared services: `platform/shared-services/<nonprod|prod>/…`.
-- Workloads: `spokes/<env>/<spoke-name>/kr/koreacentral/…`.
+- Workloads: `stacks/<env>/kr/koreacentral/spokes/<spoke-name>/…`.
+- Templates: `templates/…`.
 
 See `stack-conventions.md` for stack numbering and folder naming. For a full ASCII tree (including scaffold vs future `.tf` files), see `readme2.md` at the repository root.
 
@@ -117,7 +121,9 @@ The platform layer owns shared capabilities that many workloads consume, includi
 - Identity federation and CI authentication setup.
 - Central DNS ownership and shared resolution paths.
 - Shared governance, policy, and baseline monitoring.
-- Network primitives or services that need a single point of ownership.
+- Organization-level network primitives or services that need a single point of
+  ownership. Environment hub networking belongs under `stacks/<env>/.../hub/`
+  unless an ADR explicitly accepts shared connectivity.
 
 ### Workload Layer
 
@@ -150,13 +156,15 @@ The repository should support one or more Azure regions without changing the own
 Regional design principles:
 
 - Global services are managed independently from region-specific workload resources.
-- Initial regional anchor: **one hub per region** (Korea Central first).
+- Initial regional anchor: **one hub per environment per region** (Korea Central
+  first).
 - Regional stacks should be repeatable with parameterized inputs, not copied by hand.
 - Disaster recovery or active/active designs should be documented at the workload level when required.
 
 ## Hub–Spoke Connectivity (conceptual)
 
-- **Hub** concentrates shared egress, inbound ops paths, and private DNS policy for the design.
+- **Hub** concentrates egress, inbound ops paths, and private DNS policy inside
+  one execution environment.
 - **Spokes** attach workload VNets; workload ingress (App Gateway/WAF) and workload-scoped resources stay in the spoke.
 - Peering or equivalent connectivity follows Azure landing zone patterns with explicit routing to the hub firewall when egress inspection is required.
 
@@ -165,8 +173,8 @@ Regional design principles:
 The intended logical flow is:
 
 1. Shared platform prerequisites are created first.
-2. Hub connectivity and private DNS posture are established.
-3. Spoke networks and security/configuration dependencies are established.
+2. Each environment hub connectivity and private DNS posture is established.
+3. Spoke networks inside that environment and security/configuration dependencies are established.
 4. Stateful services are provisioned before compute is attached.
 5. Utility access, when needed, is provisioned separately from application runtime.
 6. Compute is rolled out using approved images and explicit health checks.
@@ -188,3 +196,5 @@ Detailed layer ordering is described in `layer-dependency.md`.
 - `release-strategy.md` defines artifact promotion, rollout, and rollback behavior.
 - `dns-strategy.md` defines public and private name-resolution ownership.
 - `security-baseline.md` defines the minimum security requirements for all stacks.
+- `adr/0007-environment-owned-hub-and-spoke.md` supersedes the earlier shared
+  platform hub assumption.

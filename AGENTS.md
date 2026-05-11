@@ -29,12 +29,13 @@ The repository operating model is:
   - management
   - shared services
 
-- `spokes/` contains workload-specific environments:
+- `stacks/` contains deployed environment stacks:
   - dev
   - stg
   - prod
+  - per-environment hub and spoke stacks
 
-- `stacks/` contains reusable stack templates and conventions.
+- `templates/` contains reusable stack templates and conventions.
 
 - `scripts/bootstrap/` contains one-time or rare bootstrap scripts, especially remote state setup.
 
@@ -48,10 +49,10 @@ The current priority is:
 
 1. repository hygiene
 2. Makefile safety interface
-3. platform stack validation
+3. environment stack validation
 4. bootstrap state workflow
 5. GitHub OIDC workflow
-6. dev spoke vertical slice
+6. dev hub-and-spoke vertical slice
 7. reference workload
 8. prod hardening
 

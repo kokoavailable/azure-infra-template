@@ -6,23 +6,30 @@ Each stack directory should follow a predictable layout so contributors can revi
 
 ## Repository layout (canonical)
 
-Stage 0 fixes the directory contract. Workload and platform paths follow the tree below (regions use `kr/koreacentral/` for the first region).
+Stage 0 fixes the directory contract. Deployed stack instances, platform paths,
+and templates follow the tree below (regions use `kr/koreacentral/` for the
+first region).
 
 ```
-platform/connectivity/global/…          # e.g. public DNS
-platform/connectivity/kr/koreacentral/hub/…
+platform/connectivity/global/…                # e.g. public DNS
 platform/shared-services/<nonprod|prod>/…
-spokes/<env>/<spoke-name>/kr/koreacentral/…
+stacks/<env>/kr/koreacentral/hub/…
+stacks/<env>/kr/koreacentral/spokes/<spoke-name>/…
+templates/_stack-template/…
 ```
 
 - **env**: `dev` | `stg` | `prod`
-- **spoke-name**: workload boundary such as `app-main`, `shared-airflow`, `shared-observability`
+- **spoke-name**: workload boundary such as `app-main`, `shared-airflow`,
+  `shared-observability`
 
-Spoke stacks use numeric prefixes for ordering:
+The top-level `stacks/` directory contains deployed stack instances. Reusable
+scaffolds live under `templates/`.
+
+Environment hub and spoke stacks use numeric prefixes for ordering:
 
 | Prefix | Layer                             |
 | ------ | --------------------------------- |
-| `00-`  | Spoke network / foundation        |
+| `00-`  | Hub or spoke network / foundation |
 | `05-`  | Secrets                           |
 | `06-`  | Configuration                     |
 | `10-`  | Edge (App Gateway / WAF in spoke) |
@@ -89,9 +96,13 @@ Do not split files purely to make the directory look symmetrical. Split when it 
 
 Use directory structure and inputs to separate:
 
-- platform versus workload concerns (`platform/` vs `spokes/`)
-- global versus regional resources (`connectivity/global/` vs `connectivity/kr/koreacentral/hub/`)
-- non-production versus production environments (`spokes/dev/`, `spokes/stg/`, `spokes/prod/`, and `platform/shared-services/<nonprod|prod>/`)
+- platform versus deployed environment concerns (`platform/` vs `stacks/`)
+- global versus regional resources (`platform/connectivity/global/` vs
+  `stacks/<env>/kr/koreacentral/hub/`)
+- non-production versus production environments (`stacks/dev/`, `stacks/stg/`,
+  `stacks/prod/`, and `platform/shared-services/<nonprod|prod>/`)
+- reusable templates versus deployed stack instances (`templates/` vs
+  `stacks/`)
 
 The same stack pattern should remain recognizable across environments even when values differ.
 

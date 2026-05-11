@@ -50,14 +50,14 @@ Use this order for normal project work:
 ```
 
 For the hub network task, the fix was to add a real OpenTofu scaffold for
-`platform/connectivity/kr/koreacentral/hub/00-hub-network` while leaving CIDR and
+`stacks/dev/kr/koreacentral/hub/00-hub-network` while leaving CIDR and
 subnet layout as human-approved inputs.
 
 ## Verification
 
 ```bash
 make fmt
-make validate STACK=platform/connectivity/kr/koreacentral/hub/00-hub-network
+make validate STACK=stacks/dev/kr/koreacentral/hub/00-hub-network
 make agent-diff-review AGENT_OUT=.codex/agent-runs/diff-review.md
 make agent-session-postmortem AGENT_OUT=.codex/agent-runs/session-postmortem.md
 ```
@@ -85,4 +85,4 @@ Knowledge capture is valuable only after it helps implementation move faster.
 - `.codex/prompts/diff-review.md`
 - `.codex/prompts/session-postmortem.md`
 - `docs/agent-operating-guide.md`
-- `platform/connectivity/kr/koreacentral/hub/00-hub-network/`
+- `stacks/dev/kr/koreacentral/hub/00-hub-network/`

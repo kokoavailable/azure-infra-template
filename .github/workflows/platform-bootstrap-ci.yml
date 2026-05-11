@@ -4,7 +4,8 @@ on:
   pull_request:
     paths:
       - "platform/**"
-      - "stacks/_stack-template/**"
+      - "stacks/**"
+      - "templates/_stack-template/**"
       - "scripts/bootstrap/**"
       - ".github/workflows/platform-bootstrap-ci.yml"
   push:
@@ -52,7 +53,8 @@ jobs:
             platform/connectivity/global/00-dns-public \
             platform/identity/02-identity-federation \
             platform/management/03-policy-governance \
-            stacks/_stack-template
+            stacks/dev/kr/koreacentral/hub/00-hub-network \
+            templates/_stack-template
           do
             echo "==> $d"
             (cd "$d" && tofu init -backend=false -input=false && tofu validate)

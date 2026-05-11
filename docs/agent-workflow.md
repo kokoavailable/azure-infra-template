@@ -68,6 +68,7 @@ Outputs:
 - required fixes
 - verification commands
 - merge readiness
+
 ### Portfolio Curator
 
 Use after a PR or milestone to turn engineering work into interview-ready evidence.
@@ -141,7 +142,7 @@ Architect output:
 
 Investigator output:
 
-- Inspect `spokes/dev/app-main/kr/koreacentral/00-spoke-network`, `25-utility-access`, and `30-compute`.
+- Inspect `stacks/dev/kr/koreacentral/spokes/app-main/00-spoke-network`, `25-utility-access`, and `30-compute`.
 - Confirm network outputs required by utility access.
 - Identify public IP, NSG, SSH/RDP, and secret risks.
 
@@ -153,7 +154,7 @@ Implementer output:
 Validator output:
 
 - Run `make fmt`.
-- Run `make validate STACK=spokes/dev/app-main/kr/koreacentral/25-utility-access`.
+- Run `make validate STACK=stacks/dev/kr/koreacentral/spokes/app-main/25-utility-access`.
 
 Reviewer output:
 

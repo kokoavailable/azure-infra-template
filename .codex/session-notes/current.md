@@ -145,3 +145,48 @@
   loops.
 - Added a learning entry for the difference between agent context bundles and
   implementation loops.
+
+## Current Turn Update
+
+Goal:
+
+- Replace the shared platform hub layout with environment-owned hub-and-spoke
+  stacks, while renaming reusable `stacks/` templates to `templates/`.
+
+Findings:
+
+- A single platform-owned regional hub conflicts with the desired
+  dev/stg/prod execution-environment isolation.
+- The user's preferred naming is clearer if `stacks/` means deployed stack
+  instances and reusable scaffolds move to `templates/`.
+
+Changes:
+
+- Added `docs/adr/0007-environment-owned-hub-and-spoke.md`.
+- Moved reusable stack template files from `stacks/` to `templates/`.
+- Moved the dev hub scaffold from `platform/connectivity/kr/koreacentral/hub/`
+  to `stacks/dev/kr/koreacentral/hub/`.
+- Moved spoke scaffolds from top-level `spokes/` to
+  `stacks/<env>/kr/koreacentral/spokes/<spoke-name>/`.
+- Updated architecture, dependency, DNS, roadmap, workflow, CI, and scoped
+  agent documentation for the new layout.
+
+Validation:
+
+- `make fmt` passed.
+- `make validate STACK=stacks/dev/kr/koreacentral/hub/00-hub-network` failed
+  inside the sandbox because provider registry DNS was blocked, then passed
+  with provider registry access.
+- Targeted Prettier write formatted changed Markdown/YAML files but exited on
+  HCL example files with no inferred parser.
+- Targeted Prettier check for changed Markdown/YAML files passed.
+
+Next step:
+
+- Review the diff for stale path references and state-boundary risk.
+
+Risks:
+
+- This is a broad path migration, so stale documentation paths are the main
+  review risk.
+- No apply, state migration, or backend migration was run.

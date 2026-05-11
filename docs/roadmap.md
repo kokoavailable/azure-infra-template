@@ -181,7 +181,7 @@ gh run list --limit 10
 
 Use GitHub CLI commands only when credentials are available.
 
-## Phase 6: Dev Spoke Vertical Slice
+## Phase 6: Dev Hub-and-Spoke Vertical Slice
 
 Goal: prove one workload path end to end in `dev` before touching `stg` or
 `prod`.
@@ -189,34 +189,38 @@ Goal: prove one workload path end to end in `dev` before touching `stg` or
 Preferred order:
 
 ```text
-spokes/dev/.../00-spoke-network
-spokes/dev/.../05-secrets
-spokes/dev/.../06-configuration
-spokes/dev/.../20-data
-spokes/dev/.../25-utility-access
-spokes/dev/.../30-compute
-spokes/dev/.../10-edge
-spokes/dev/.../40-observability
+stacks/dev/kr/koreacentral/hub/00-hub-network
+stacks/dev/kr/koreacentral/hub/05-private-dns
+stacks/dev/kr/koreacentral/hub/10-egress-routing-security
+stacks/dev/kr/koreacentral/hub/20-access-ops
+stacks/dev/kr/koreacentral/spokes/<spoke>/00-spoke-network
+stacks/dev/kr/koreacentral/spokes/<spoke>/05-secrets
+stacks/dev/kr/koreacentral/spokes/<spoke>/06-configuration
+stacks/dev/kr/koreacentral/spokes/<spoke>/20-data
+stacks/dev/kr/koreacentral/spokes/<spoke>/25-utility-access
+stacks/dev/kr/koreacentral/spokes/<spoke>/30-compute
+stacks/dev/kr/koreacentral/spokes/<spoke>/10-edge
+stacks/dev/kr/koreacentral/spokes/<spoke>/40-observability
 ```
 
 Tasks:
 
 - Start with dev only.
-- Validate network, private DNS, Key Vault, configuration, data, compute, edge,
-  and observability dependency flow.
+- Validate hub network, private DNS, spoke network, Key Vault, configuration,
+  data, compute, edge, and observability dependency flow.
 - Keep utility access separate from runtime compute.
 - Update stack READMEs as interfaces become real.
 
 Done when:
 
-- Dev spoke dependencies are explicit and acyclic.
+- Dev hub and spoke dependencies are explicit and acyclic.
 - Each dev stack validates independently.
 - The path from network to observability is documented and reviewable.
 
 Validation:
 
 ```bash
-make validate STACK=spokes/dev/<spoke>/kr/koreacentral/<stack>
+make validate STACK=stacks/dev/kr/koreacentral/spokes/<spoke>/<stack>
 ```
 
 ## Phase 7: Reference Workload

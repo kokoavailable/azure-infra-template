@@ -6,7 +6,7 @@ This directory contains shared platform infrastructure with the largest shared b
 
 Typical areas:
 
-- connectivity
+- global connectivity
 - identity
 - management
 - shared services
@@ -21,7 +21,7 @@ Be conservative with:
 - OIDC
 - RBAC
 - Azure Policy
-- shared networking
+- globally shared networking
 - artifact registry
 - production shared services
 
@@ -33,16 +33,16 @@ Do not expand platform scope because a dependent spoke would also benefit.
 
 ## Dependency rules
 
-Platform is upstream of spokes.
+Platform is upstream of environment stacks.
 
 Allowed direction:
 
 - `platform/*` -> shared outputs
-- `spokes/*` -> consume platform outputs
+- `stacks/*` -> consume platform outputs
 
 Disallowed direction:
 
-- platform stacks depending on spoke state
+- platform stacks depending on environment stack state
 - reverse remote-state lookups from platform into workload stacks
 - cycles between platform domains
 
@@ -60,7 +60,6 @@ Every platform change must include:
 Call out extra care when touching:
 
 - `platform/connectivity/global/`
-- `platform/connectivity/kr/koreacentral/hub/`
 - `platform/identity/`
 - `platform/management/`
 - `platform/shared-services/prod/`

@@ -84,8 +84,8 @@ These prompts are lightweight wrappers around the repository rules and the role 
 
 - root `AGENTS.md`
 - scoped `platform/AGENTS.md`
-- scoped `spokes/AGENTS.md`
 - scoped `stacks/AGENTS.md`
+- scoped `templates/AGENTS.md`
 - `docs/agent-workflow.md`
 - the pull request template
 

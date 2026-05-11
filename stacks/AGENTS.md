@@ -2,62 +2,86 @@
 
 ## Scope
 
-This directory contains reusable stack templates, conventions, and safe composition patterns.
+This directory contains deployed environment stacks.
 
-These files define how new stacks should be structured before stack-specific values are introduced elsewhere.
+Path model:
+
+- `stacks/dev/kr/koreacentral/hub/...`
+- `stacks/dev/kr/koreacentral/spokes/<spoke-name>/...`
+- `stacks/stg/kr/koreacentral/hub/...`
+- `stacks/stg/kr/koreacentral/spokes/<spoke-name>/...`
+- `stacks/prod/kr/koreacentral/hub/...`
+- `stacks/prod/kr/koreacentral/spokes/<spoke-name>/...`
 
 ## Operating rules
 
 Read root `AGENTS.md` first, then this file.
 
-Templates must be generic.
+Start with `dev`.
 
-Do not include real environment values.
+Do not modify `prod` unless explicitly requested.
 
-Do not include real backend values.
+One PR should usually affect one environment and one hub or spoke boundary.
 
-Keep examples safe, fake, and clearly non-production.
+Do not modify dev, stg, and prod together unless the task explicitly requires cross-environment alignment.
 
-Favor conventions that reduce review ambiguity across `platform/` and `spokes/`.
+## Preferred implementation order inside each environment
 
-## Required template shape
+1. `hub/00-hub-network`
+2. `hub/05-private-dns`
+3. `hub/10-egress-routing-security`
+4. `hub/20-access-ops`
+5. `spokes/<spoke-name>/00-spoke-network`
+6. `spokes/<spoke-name>/05-secrets`
+7. `spokes/<spoke-name>/06-configuration`
+8. `spokes/<spoke-name>/20-data`
+9. `spokes/<spoke-name>/25-utility-access`
+10. `spokes/<spoke-name>/30-compute`
+11. `spokes/<spoke-name>/10-edge`
+12. `spokes/<spoke-name>/40-observability`
 
-A stack template should include:
+## Dependency rules
 
-- `README.md`
-- `versions.tf`
-- `providers.tf`
-- `backend.tf`
-- `backend.hcl.example`
-- `locals.tf`
-- `variables.tf`
-- `main.tf`
-- `outputs.tf`
-- `terraform.tfvars.example`
+Cross-stack dependencies must flow downstream only.
 
-## Design rules
+Typical direction inside an environment:
 
-Each template should make these expectations obvious:
+- hub network -> hub private DNS / egress / access operations
+- hub outputs -> spoke networks
+- network -> secrets/configuration
+- secrets/configuration -> data
+- network/data -> utility-access when operator access is required
+- data -> compute
+- compute -> observability
+- edge depends on underlying network and workload targets
 
-- one stack owns one state
-- backend config is externalized
-- variable interface is explicit
-- outputs are stable and intentional
-- dependencies are documented
-- no hidden environment assumptions
+Do not introduce:
 
-If template conventions change, update:
+- cyclic remote-state dependencies
+- implicit dependencies based only on naming
+- cross-environment spoke coupling unless explicitly documented
+- platform-to-environment reverse state ownership
+- hub stacks depending on spoke state
 
-- `docs/stack-conventions.md`
-- `docs/codex-workflow.md` when review workflow changes
-- any related README guidance
+## Change requirements
+
+Each environment stack change should state:
+
+- environment
+- hub or spoke name
+- affected stack path
+- upstream dependency path
+- validation command
+- rollback note
+- remaining risk
 
 ## Review focus
 
 Prioritize review of:
 
-- accidental real values in examples
-- undocumented required files
-- missing variable or output guidance
-- conventions that would encourage cyclic dependencies
-- template choices that make unsafe apply behavior easier
+- environment isolation
+- secret handling
+- private endpoint and DNS assumptions
+- workload ingress exposure
+- data-before-compute ordering
+- prod scope creep
