@@ -11,7 +11,7 @@ This document defines the minimum security controls expected across platform and
 | Ingress (App Gateway / WAF for an application) | **Spoke**                        | Per workload or spoke boundary; keeps blast radius scoped to the app.                      |
 | Egress filtering, forced tunneling intent      | **Hub**                          | Azure Firewall / route intent centralized; spokes send north–south traffic via hub design. |
 | Shared NAT                                     | **Hub** (or hub policy)          | Avoid ad hoc per-spoke egress unless documented.                                           |
-| Bastion / shared ops access                    | **Hub** (or hub-owned ops stack) | Prefer consistent jump paths over scattered public IPs on spokes.                          |
+| Shared ops access path                         | **Hub** (or hub-owned ops stack) | Prefer consistent Bastion or jumpbox paths over scattered public IPs on spokes.            |
 | Dev utility access                             | **Spoke exception**              | A source-restricted public utility VM is allowed only for documented dev operator access.  |
 | Private endpoints                              | **Spoke** (resource side)        | DNS registration follows hub-aligned private DNS strategy (`dns-strategy.md`).             |
 
@@ -33,6 +33,7 @@ This document defines the minimum security controls expected across platform and
 
 - Prefer private endpoints and private routing for stateful services.
 - Restrict inbound access to approved edge services (spoke App Gateway/WAF) and hub-approved management paths.
+- Require source-restricted SSH and password authentication disabled for any approved custom jumpbox.
 - Treat public utility VM access as a dev-only exception; require source IP restrictions, explicit ownership, and a documented removal or replacement path.
 - Segment subnets by workload role and apply NSG rules explicitly.
 - Avoid broad allow rules that mix platform administration and workload traffic.

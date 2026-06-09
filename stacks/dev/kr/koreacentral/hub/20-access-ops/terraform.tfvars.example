@@ -1,0 +1,22 @@
+# subscription_id / tenant_id: set once in platform/terraform.shared.tfvars;
+# repo-root `make plan|apply STACK=stacks/dev/kr/koreacentral/hub/20-access-ops` loads it automatically.
+
+organization = "myorg"
+environment  = "dev"
+
+# Usually the resource group output from hub/00-hub-network.
+access_ops_resource_group_name = "rg-myorg-dev-krc-hub-network"
+
+# Jumpbox placement is an architecture/security decision. Keep null until subnet,
+# SSH source ranges, image, and key lifecycle are approved.
+jumpbox = null
+
+# Example shape only. Do not commit a real operator key or broad SSH source range.
+# jumpbox = {
+#   name                                = "vm-myorg-dev-krc-jumpbox"
+#   subnet_id                           = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-myorg-dev-krc-hub-network/providers/Microsoft.Network/virtualNetworks/vnet-myorg-dev-krc-hub/subnets/snet-shared"
+#   admin_username                      = "azureuser"
+#   admin_ssh_public_key                = "ssh-ed25519 AAAA... example"
+#   public_ip_name                      = "pip-myorg-dev-krc-jumpbox"
+#   allowed_ssh_source_address_prefixes = ["203.0.113.10/32"]
+# }

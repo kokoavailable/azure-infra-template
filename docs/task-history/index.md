@@ -14,6 +14,8 @@ Use task history to answer:
 ## Files
 
 - [2026-05](2026-05.md)
+- [2026-05-13 Dev Hub Scaffold Summary](2026-05-13-dev-hub-scaffold-summary.md)
+- [2026-05-13 Dev Hub Scaffold Learning Guide](2026-05-13-dev-hub-scaffold-learning.md)
 
 ## Entry Format
 

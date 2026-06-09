@@ -2,8 +2,10 @@
 
 Egress path, routing intent, and hub-level security controls for Korea Central.
 
-This stack is currently a scaffold. It documents the intended ownership boundary
-for centralized egress before OpenTofu resources are added.
+This stack owns the first OpenTofu scaffold for centralized egress route intent.
+Route table and route choices remain human-approved inputs; this stack provides
+the state boundary, optional hub-owned route tables, and stable outputs for
+downstream route consumers.
 
 ## Intended scope
 
@@ -60,13 +62,11 @@ The following require explicit human approval before implementation or apply:
 | Affected path        | `stacks/dev/kr/koreacentral/hub/10-egress-routing-security`                                                                                                                                                      |
 | Affected Azure scope | Future hub egress resources such as Azure Firewall, firewall policy, route tables, NAT/outbound controls, diagnostic settings, and outputs consumed by spoke routing stacks                                      |
 | Blast radius         | Egress routing affects outbound connectivity for every spoke that adopts hub route intent. Wrong routes or firewall policy can break package retrieval, service access, private endpoints, or production traffic |
-| Validation command   | Not applicable yet; no OpenTofu files exist in this scaffold. Once `.tf` files are added, use `make validate STACK=stacks/dev/kr/koreacentral/hub/10-egress-routing-security`                                    |
-| Rollback note        | Before implementation, rollback is documentation revert only. After resources are added, rollback must be plan-reviewed because route and firewall changes can immediately affect spoke connectivity             |
-| Remaining risk       | Firewall policy, default routes, NAT ownership, diagnostics, and production egress behavior are not implemented yet and require architecture/security review before coding                                       |
+| Validation command   | `make validate STACK=stacks/dev/kr/koreacentral/hub/10-egress-routing-security`                                                                                                                                  |
+| Rollback note        | Before apply, rollback is a code revert. After apply, rollback must be plan-reviewed because route changes can immediately affect spoke connectivity                                                             |
+| Remaining risk       | Firewall policy, default routes, NAT ownership, diagnostics, and production egress behavior remain input or future-stack decisions and require architecture/security review before plan/apply                    |
 
 ## Implementation notes
-
-When this scaffold becomes an OpenTofu stack:
 
 - keep one state owner for hub egress and route intent
 - keep backend configuration externalized through `backend.hcl`
@@ -76,6 +76,20 @@ When this scaffold becomes an OpenTofu stack:
 - include diagnostics and logging expectations with the first implementation
 - run `make fmt`
 - run `make validate STACK=stacks/dev/kr/koreacentral/hub/10-egress-routing-security`
+
+## Commands
+
+```bash
+make fmt
+make validate STACK=stacks/dev/kr/koreacentral/hub/10-egress-routing-security
+```
+
+Planning requires approved `route_tables` values plus expected Azure/backend
+access:
+
+```bash
+make plan STACK=stacks/dev/kr/koreacentral/hub/10-egress-routing-security
+```
 
 Do not combine egress security implementation with hub network, private DNS, or
 access operations in the same task unless explicitly approved.

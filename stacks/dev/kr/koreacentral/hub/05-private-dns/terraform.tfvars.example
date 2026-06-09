@@ -1,0 +1,18 @@
+# subscription_id / tenant_id: set once in platform/terraform.shared.tfvars;
+# repo-root `make plan|apply STACK=stacks/dev/kr/koreacentral/hub/05-private-dns` loads it automatically.
+
+organization = "myorg"
+environment  = "dev"
+
+# Usually the resource group output from hub/00-hub-network.
+private_dns_resource_group_name = "rg-myorg-dev-krc-hub-network"
+
+# Zone choices are architecture decisions. Review and approve before plan/apply.
+private_dns_zones = {
+  key_vault = {
+    name = "privatelink.vaultcore.azure.net"
+  }
+}
+
+# VNet IDs should come from approved upstream outputs. Keep registration off for private endpoint zones.
+virtual_network_links = {}

@@ -49,3 +49,15 @@ Keep entries short and operational. Prefer three to five useful entries per day.
   `docs/troubleshooting/2026-05-10-agent-workflow-documentation-loop.md`
 - Five-minute review: When should an agent workflow stop generating context and
   start changing the next project file?
+
+## 2026-05-16 - Hub VNet Learning Path
+
+- Definition: A hub VNet is the shared network control plane for an environment,
+  while spokes own workload-specific network and application resources.
+- Why it matters here: The dev hub stacks define shared VNet, private DNS,
+  egress routing, and access operations that downstream spokes should consume
+  without creating reverse dependencies.
+- Revisit: `docs/learning/hub-vnet-learning-notes.md`,
+  `stacks/dev/kr/koreacentral/hub/`
+- Five-minute review: Why should a spoke read hub outputs, but the hub avoid
+  reading spoke state?

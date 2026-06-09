@@ -150,43 +150,139 @@
 
 Goal:
 
-- Replace the shared platform hub layout with environment-owned hub-and-spoke
-  stacks, while renaming reusable `stacks/` templates to `templates/`.
+- Investigate why running `tofu apply` from a `hub` directory returned
+  `Error: No configuration files`, and identify the safe repository command
+  path.
 
 Findings:
 
-- A single platform-owned regional hub conflicts with the desired
-  dev/stg/prod execution-environment isolation.
-- The user's preferred naming is clearer if `stacks/` means deployed stack
-  instances and reusable scaffolds move to `templates/`.
+- The repository is multi-stack: `stacks/dev/kr/koreacentral/hub` is a grouping
+  directory, not a state-owning OpenTofu stack.
+- Actual dev hub stacks live under numbered child directories:
+  `00-hub-network`, `05-private-dns`, `10-egress-routing-security`, and
+  `20-access-ops`.
+- The parent hub directory contains no `.tf` configuration files, so raw
+  `tofu apply` there fails before planning.
+- Repository policy prefers Makefile entrypoints, especially
+  `make plan STACK=<stack-path>` and `make apply STACK=<stack-path>`.
+- Dev hub stack directories currently have `backend.hcl.example` and
+  `terraform.tfvars.example`, but no real `backend.hcl` or `terraform.tfvars`
+  files.
 
 Changes:
 
-- Added `docs/adr/0007-environment-owned-hub-and-spoke.md`.
-- Moved reusable stack template files from `stacks/` to `templates/`.
-- Moved the dev hub scaffold from `platform/connectivity/kr/koreacentral/hub/`
-  to `stacks/dev/kr/koreacentral/hub/`.
-- Moved spoke scaffolds from top-level `spokes/` to
-  `stacks/<env>/kr/koreacentral/spokes/<spoke-name>/`.
-- Updated architecture, dependency, DNS, roadmap, workflow, CI, and scoped
-  agent documentation for the new layout.
+- No repository files were changed except this session note.
 
 Validation:
 
-- `make fmt` passed.
-- `make validate STACK=stacks/dev/kr/koreacentral/hub/00-hub-network` failed
-  inside the sandbox because provider registry DNS was blocked, then passed
-  with provider registry access.
-- Targeted Prettier write formatted changed Markdown/YAML files but exited on
-  HCL example files with no inferred parser.
-- Targeted Prettier check for changed Markdown/YAML files passed.
+- Read-only investigation only; no validation, plan, apply, backend migration,
+  or state operation was run.
 
 Next step:
 
-- Review the diff for stale path references and state-boundary risk.
+## 2026-05-27 - Dev Hub Network Local Variables
+
+Goal:
+
+- Create a practical local `terraform.tfvars` for
+  `stacks/dev/kr/koreacentral/hub/00-hub-network` and clarify how shared and
+  stack-local variables are combined through the Makefile workflow.
+
+Files read:
+
+- `stacks/dev/kr/koreacentral/hub/00-hub-network/variables.tf`
+- `stacks/dev/kr/koreacentral/hub/00-hub-network/terraform.tfvars.example`
+- `stacks/dev/kr/koreacentral/hub/00-hub-network/README.md`
+- `stacks/dev/kr/koreacentral/hub/00-hub-network/providers.tf`
+- `stacks/dev/kr/koreacentral/hub/00-hub-network/locals.tf`
+- `stacks/dev/kr/koreacentral/hub/00-hub-network/backend.tf`
+- `stacks/dev/kr/koreacentral/hub/00-hub-network/outputs.tf`
+- `Makefile`
+- `.gitignore`
+
+Findings:
+
+- `platform/terraform.shared.tfvars` exists locally and is ignored by git.
+- `stacks/dev/kr/koreacentral/hub/00-hub-network/terraform.tfvars` did not
+  exist before this turn.
+- The Makefile passes shared variables first and stack-local variables second:
+  `-var-file=$(SHARED_VARS)` followed by `-var-file=terraform.tfvars`.
+- Stack-local values override duplicate keys from shared vars if the same
+  variable is defined in both places.
+- Both real `*.tfvars` files are ignored by `.gitignore`; examples are tracked.
+
+Changes:
+
+- Added local
+  `stacks/dev/kr/koreacentral/hub/00-hub-network/terraform.tfvars` with dev hub
+  network values for `organization`, `environment`, `hub_address_space`,
+  `hub_subnets`, `cost_center`, and `owner`.
+- Did not modify `platform/terraform.shared.tfvars` because it already exists
+  locally and may contain sensitive subscription or tenant identifiers.
+
+Validation:
+
+- `make validate STACK=stacks/dev/kr/koreacentral/hub/00-hub-network` first
+  failed in the sandbox because provider registry DNS was blocked.
+- `make validate STACK=stacks/dev/kr/koreacentral/hub/00-hub-network` passed
+  with provider registry access.
+
+Next step:
+
+- Run `make validate STACK=stacks/dev/kr/koreacentral/hub/00-hub-network`.
+- After backend values and CIDR/subnet choices are confirmed, run
+  `make plan STACK=stacks/dev/kr/koreacentral/hub/00-hub-network`.
 
 Risks:
 
-- This is a broad path migration, so stale documentation paths are the main
-  review risk.
-- No apply, state migration, or backend migration was run.
+- The sample CIDR `10.0.0.0/20` and subnet `10.0.0.0/24` must be checked
+  against any existing Azure, VPN, ExpressRoute, and on-premises address spaces
+  before plan/apply.
+- Applying this stack creates the dev Korea Central hub resource group, VNet,
+  and subnet resources and can affect downstream hub and spoke design.
+
+- Create/review real `backend.hcl` and `terraform.tfvars` for the first stack,
+  then run `make plan STACK=stacks/dev/kr/koreacentral/hub/00-hub-network`.
+
+Risks:
+
+- Running raw `tofu apply` in a grouping directory bypasses repository guardrails
+  and is not the intended workflow.
+- Applying the hub network can affect downstream private DNS, egress routing,
+  access operations, and future spokes.
+- Real backend and variable files may contain environment-specific values and
+  should not be committed if they contain sensitive or local configuration.
+
+## 2026-05-16 - Hub VNet Learning Notes
+
+Goal:
+
+- Convert the hub VNet and Azure hub stack explanation into a durable learning
+  file in the repository.
+
+Files read:
+
+- `docs/learning/inbox.md`
+- `.codex/session-notes/current.md`
+- `docs/task-history/`
+
+Changes:
+
+- Added `docs/learning/hub-vnet-learning-notes.md` with OpenTofu syntax,
+  Azure VNet concepts, hub-spoke topology, dev hub stack responsibilities,
+  state-boundary guidance, review questions, practice routines, interview
+  drills, and official learning links.
+- Added a short learning inbox entry pointing to the detailed hub VNet note.
+
+Validation:
+
+- Pending targeted Markdown formatting check.
+
+Next step:
+
+- Run Prettier check on the changed Markdown files.
+
+Risks:
+
+- Documentation-only change; no infrastructure, backend, state, or production
+  behavior changed.

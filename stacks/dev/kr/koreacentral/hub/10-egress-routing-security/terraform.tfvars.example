@@ -1,0 +1,11 @@
+# subscription_id / tenant_id: set once in platform/terraform.shared.tfvars;
+# repo-root `make plan|apply STACK=stacks/dev/kr/koreacentral/hub/10-egress-routing-security` loads it automatically.
+
+organization = "myorg"
+environment  = "dev"
+
+# Usually the resource group output from hub/00-hub-network.
+egress_resource_group_name = "rg-myorg-dev-krc-hub-network"
+
+# Route choices are architecture/security decisions. Review and approve before plan/apply.
+route_tables = {}
