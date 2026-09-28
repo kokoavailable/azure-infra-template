@@ -4,7 +4,7 @@ exclude: ^(\.terraform/|node_modules/)
 repos:
   # 원격 훅 (공통 린트)
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-merge-conflict
       - id: end-of-file-fixer
